@@ -50,7 +50,7 @@ public static class ServicecCollectionExtensions
         //--ViewModels
         services
             //--Windows
-            .AddTransient<IMainWindowViewModel, MainWindowViewModel>()
+            .AddSingleton<IMainWindowViewModel, MainWindowViewModel>()
             
             //--Dialogs
             .AddTransient<ICreateChatDialogViewModel, CreateChatDialogViewModel>();

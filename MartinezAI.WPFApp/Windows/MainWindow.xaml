@@ -7,16 +7,21 @@
         xmlns:vm="clr-namespace:MartinezAI.WPFApp.ViewModels"
         mc:Ignorable="d"
         Title="{Binding AppTitle}" 
-        d:DesignHeight="500" 
+        d:DesignHeight="900" 
         d:DesignWidth="800" 
         WindowStyle="ToolWindow" 
         WindowState="Maximized"
         Foreground="{DynamicResource MainFontForegroundBrush}"
-        Background="{DynamicResource AppBackgroundBrush}">
+        Background="{DynamicResource AppBackgroundBrush}"
+        Style="{DynamicResource WindowSettings}">
 
     <Window.DataContext>
         <vm:MainWindowViewModelDesign />
     </Window.DataContext>
+
+    <Window.Resources>
+        <ResourceDictionary Source="/Styles/MainWindowStyles.xaml" />
+    </Window.Resources>
 
     <Grid>
         <Grid.ColumnDefinitions>
@@ -33,6 +38,7 @@
         <!-- CHAT LIST -->
         <Border Grid.Column="0" 
                 Margin="10" 
+                d:Width="300"
                 BorderThickness="1" 
                 BorderBrush="{DynamicResource ContainerBorderBrush}"
                 HorizontalAlignment="Stretch">
@@ -48,14 +54,97 @@
                 <TextBlock Grid.Row="0" Text="CHATS" FontSize="22" FontWeight="Bold" HorizontalAlignment="Center" />
                 
                 <!-- CHAT LIST SCROLLVIEWER -->
-                <ScrollViewer Grid.Row="1" Margin="0,10,0,0" VerticalScrollBarVisibility="Auto">
-                    
-                </ScrollViewer>
-                
+                <ListBox Grid.Row="1"
+                         Margin="0,10,0,0"
+                         ItemsSource="{Binding ChatHistory}"
+                         Background="{DynamicResource AppBackgroundBrush}"
+                         BorderThickness="0"
+                         ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                         ItemContainerStyle="{StaticResource ChatHistoryListBoxItemContainerStyle}" 
+                         SelectedItem="{Binding SelectedChat}">
+                    <ListBox.ItemTemplate>
+                        <DataTemplate>
+                            <TextBlock Text="{Binding ChatTitle}"
+                                       TextTrimming="CharacterEllipsis"
+                                       Foreground="{DynamicResource MainFontForegroundBrush}"
+                                       VerticalAlignment="Center"/>
+                        </DataTemplate>
+                    </ListBox.ItemTemplate>
+                </ListBox>
+
+
                 <!-- CREATE NEW CHAT -->
                 <Button Grid.Row="2" Margin="0,10,0,0" Content="START NEW CHAT" Command="{Binding StartChatCommand}" />
             </Grid>
             
         </Border>
+
+        <!-- ACTUAL CHAT -->
+        <Grid Grid.Column="2">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="*" />
+                <RowDefinition Height="Auto" />
+            </Grid.RowDefinitions>
+            
+            <!-- CHAT HEADER -->
+            <Border Grid.Row="0"
+                    Margin="10"
+                    Padding="10"
+                    BorderBrush="{DynamicResource ContainerBorderBrush}"
+                    BorderThickness="1">
+                <StackPanel>
+                    <TextBlock Text="Title:" />
+                    <TextBlock Text="{Binding SelectedChat.ChatTitle}"
+                               FontStyle="Italic"
+                               FontSize="14"
+                               Margin="0,0,0,0" 
+                               Foreground="#FFD2A320" />
+
+                    <TextBlock Text="AI Context:"
+                               Margin="0,10,0,0"/>
+                    <ScrollViewer MaxHeight="150"
+                                  Margin="0,5,0,0"
+                                  VerticalScrollBarVisibility="Auto">
+                        <TextBlock Text="{Binding SelectedChat.ChatContext}"
+                               FontStyle="Italic"
+                               FontSize="14"
+                               Foreground="#FFD2A320"
+                               TextWrapping="Wrap"/>
+                    </ScrollViewer>
+                </StackPanel>
+            </Border>
+            
+            <!-- CHAT HISTORY -->
+            <Border Grid.Row="1"
+                    Margin="10">
+                
+            </Border>
+            
+            <!-- USER INTERFACE -->
+            <Border Grid.Row="2"
+                    Margin="10"
+                    Padding="10">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+                    
+                    <!-- USER INPUT -->
+                    <TextBox x:Name="txtUserInput" 
+                             Grid.Row="0"
+                             Height="75"
+                             AcceptsTab="True" 
+                             VerticalScrollBarVisibility="Auto"
+                             Text="{Binding UserInput, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}">
+                        <TextBox.InputBindings>
+                            <KeyBinding Key="Enter" Command="{Binding SendMessageCommand}" />
+                            <KeyBinding Gesture="Shift+Return" Command="{Binding NewLineCommand}" CommandParameter="{Binding ElementName=txtUserInput, Mode=OneWay}" />
+                        </TextBox.InputBindings>
+                    </TextBox>
+                </Grid>
+            </Border>
+        </Grid>
     </Grid>
 </Window>

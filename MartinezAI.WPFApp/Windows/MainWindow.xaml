@@ -122,29 +122,26 @@
             </Border>
             
             <!-- USER INTERFACE -->
-            <Border Grid.Row="2"
-                    Margin="10"
-                    Padding="10">
-                <Grid>
-                    <Grid.RowDefinitions>
-                        <RowDefinition Height="Auto" />
-                        <RowDefinition Height="Auto" />
-                    </Grid.RowDefinitions>
-                    
-                    <!-- USER INPUT -->
-                    <TextBox x:Name="txtUserInput" 
+            <Grid Grid.Row="2"
+                  Margin="10">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
+
+                <!-- USER INPUT -->
+                <TextBox x:Name="txtUserInput" 
                              Grid.Row="0"
                              Height="75"
                              AcceptsTab="True" 
                              VerticalScrollBarVisibility="Auto"
                              Text="{Binding UserInput, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}">
-                        <TextBox.InputBindings>
-                            <KeyBinding Key="Enter" Command="{Binding SendMessageCommand}" />
-                            <KeyBinding Gesture="Shift+Return" Command="{Binding NewLineCommand}" CommandParameter="{Binding ElementName=txtUserInput, Mode=OneWay}" />
-                        </TextBox.InputBindings>
-                    </TextBox>
-                </Grid>
-            </Border>
+                    <TextBox.InputBindings>
+                        <KeyBinding Key="Enter" Command="{Binding SendMessageCommand}" />
+                        <KeyBinding Gesture="Shift+Return" Command="{Binding NewLineCommand}" CommandParameter="{Binding ElementName=txtUserInput, Mode=OneWay}" />
+                    </TextBox.InputBindings>
+                </TextBox>
+            </Grid>
         </Grid>
     </Grid>
 </Window>

@@ -1,6 +1,6 @@
 ﻿using System.Windows;
 
-namespace MartinezAI.WPFApp.ViewModels;
+namespace MartinezAI.WPFApp.Interfaces;
 
 public interface IViewModel
 {

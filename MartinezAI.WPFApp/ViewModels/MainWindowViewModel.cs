@@ -1,7 +1,9 @@
 ﻿using MartinezAI.WPFApp.ExtensionMethods;
+using MartinezAI.WPFApp.Interfaces;
 using MartinezAI.WPFApp.Tools;
 using MartinezAI.WPFApp.Windows.Dialogs;
 using Microsoft.Extensions.DependencyInjection;
+using OpenAI.Chat;
 using System.Collections.ObjectModel;
 using System.Windows;
 using System.Windows.Controls;
@@ -14,17 +16,19 @@ public interface IMainWindowViewModel : IViewModel
     string UserInput { get; set; }
     ObservableCollection<ChatHistoryContainer> ChatHistory { get; }
     ChatHistoryContainer SelectedChat { get; set; }
+    bool IsChatSelected { get; }
 
     AsyncCommand StartChatCommand { get; }
     AsyncCommand SendMessageCommand { get; }
     AsyncCommand<TextBox> NewLineCommand { get; }
+    AsyncCommand<ChatHistoryContainer> CloseChatCommand { get; }
 
     Task InitializeChatAsync(
         string chatTitle,
         string chatContext);
 }
 
-public class MainWindowViewModelDesign : BaseViewModel, IMainWindowViewModel
+public class MainWindowViewModelDesign : NotifyableClass, IMainWindowViewModel
 {
     #region "IViewModel"
     public Window Window { get; set; }
@@ -51,18 +55,27 @@ public class MainWindowViewModelDesign : BaseViewModel, IMainWindowViewModel
             0123456789 0123456789 0123456789 0123456789 0123456789 0123456789 0123456789 0123456789 0123456789 
             0123456789 0123456789 0123456789 0123456789 0123456789 0123456789 0123456789 0123456789 0123456789 
             """)
+        {
+            ChatMessages = new ObservableCollection<ChatHistoryMessage>()
+            {
+                new ChatHistoryMessage("Assistant", "Hello! How can I help you?"),
+                new ChatHistoryMessage("You", "Can you please tell me how to make a grilled cheese sandwich?")
+            }
+        }
     };
     public ChatHistoryContainer SelectedChat
     {
         get => this.ChatHistory[3];
         set { }
     }
+    public bool IsChatSelected => this.SelectedChat != null;
     #endregion
 
     #region "Commands"
     public AsyncCommand StartChatCommand { get; } = null;
     public AsyncCommand SendMessageCommand { get; } = null;
     public AsyncCommand<TextBox> NewLineCommand { get; } = null;
+    public AsyncCommand<ChatHistoryContainer> CloseChatCommand { get; } = null;
     #endregion
 
     #region "Public Methods"
@@ -72,7 +85,8 @@ public class MainWindowViewModelDesign : BaseViewModel, IMainWindowViewModel
 }
 
 public class MainWindowViewModel(
-    IServiceProvider _serviceProvider) : BaseViewModel, IMainWindowViewModel
+    IServiceProvider _serviceProvider,
+    ChatClient _chatClient) : NotifyableClass, IMainWindowViewModel
 {
     #region "IViewModel"
     public Window Window { get; set; }
@@ -105,14 +119,17 @@ public class MainWindowViewModel(
         {
             field = value;
             OnPropertyChanged();
+            OnPropertyChanged(nameof(IsChatSelected));
         }
     }
+    public bool IsChatSelected => this.SelectedChat != null;
     #endregion
 
     #region "Commands"
     public AsyncCommand StartChatCommand => new AsyncCommand(StartChatAsync);
     public AsyncCommand SendMessageCommand => new AsyncCommand(SendMessageAsync);
     public AsyncCommand<TextBox> NewLineCommand => new AsyncCommand<TextBox>(NewLineAsync);
+    public AsyncCommand<ChatHistoryContainer> CloseChatCommand => new AsyncCommand<ChatHistoryContainer>(CloseChatAsync);
     #endregion
 
     #region "Private Methods"
@@ -126,11 +143,27 @@ public class MainWindowViewModel(
         return Task.CompletedTask;
     }
 
-    private Task SendMessageAsync()
+    private async Task SendMessageAsync()
     {
-        this.ChatHistory.Add(new ChatHistoryContainer(this.UserInput));
-        return Task.CompletedTask;
+        this.SelectedChat.AddUserMessage(this.UserInput);
+
+        ChatHistoryMessage newAssistantMessage = new ChatHistoryMessage("Assistant", String.Empty);
+        this.SelectedChat.ChatMessages.Add(newAssistantMessage);
+
+        await foreach (StreamingChatCompletionUpdate completionUpdate in
+            _chatClient.CompleteChatStreamingAsync(
+                this.SelectedChat.OpenAIChatHistory))
+        {
+            foreach (ChatMessageContentPart contentPart in completionUpdate.ContentUpdate)
+            {
+                newAssistantMessage.Message += contentPart.Text;
+            }
+        }
+
+        this.SelectedChat.OpenAIChatHistory.Add(new AssistantChatMessage(newAssistantMessage.Message));
+        this.UserInput = String.Empty;
     }
+
     private Task NewLineAsync(TextBox textBox)
     {
         if (textBox == null) { return Task.CompletedTask; }
@@ -150,6 +183,16 @@ public class MainWindowViewModel(
 
         return Task.CompletedTask;
     }
+
+    private Task CloseChatAsync(ChatHistoryContainer clickedChatHistory)
+    {
+        if (this.SelectedChat == null) { return Task.CompletedTask; }
+
+        //this.ChatHistory.Remove(this.SelectedChat);
+        this.ChatHistory.Remove(clickedChatHistory);
+
+        return Task.CompletedTask;
+    }
     #endregion
 
     public Task InitializeChatAsync(
@@ -160,6 +203,7 @@ public class MainWindowViewModel(
         this.ChatHistory.Add(newChat);
 
         //--Make new chat the active chat.
+        this.SelectedChat = newChat;
 
         return Task.CompletedTask;
     }

@@ -4,6 +4,8 @@ using MartinezAI.WPFApp.Windows;
 using MartinezAI.WPFApp.Windows.Dialogs;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Options;
+using OpenAI.Chat;
 using System.Windows;
 
 namespace MartinezAI.WPFApp;
@@ -38,6 +40,16 @@ public static class ServicecCollectionExtensions
         //--Configure options
         services
             .Configure<SystemSettings>(config.GetSection("SystemSettings"));
+
+        //--OpenAIKey
+        services
+            .AddSingleton<ChatClient>((services) =>
+            {
+                IOptions<SystemSettings> settings = services.GetRequiredService<IOptions<SystemSettings>>();
+                return new ChatClient(
+                    "gpt-4.1",
+                    settings.Value.OpenAIKey);
+            });
 
         //--Windows
         services

@@ -1,4 +1,5 @@
 ﻿using MartinezAI.WPFApp.ExtensionMethods;
+using MartinezAI.WPFApp.Interfaces;
 using MartinezAI.WPFApp.Tools;
 using System.Windows;
 
@@ -26,7 +27,7 @@ public class CreateChatDialogViewModelDesign : ICreateChatDialogViewModel
 
 public class CreateChatDialogViewModel(
     IMainWindowViewModel _mainWindowViewModel) 
-    : BaseViewModel, ICreateChatDialogViewModel
+    : NotifyableClass, ICreateChatDialogViewModel
 {
     #region "IViewModel"
     public Window Window { get; set; }

@@ -2,6 +2,7 @@
 using MartinezAI.WPFApp.Interfaces;
 using MartinezAI.WPFApp.Tools;
 using MartinezAI.WPFApp.Windows.Dialogs;
+using MdXaml;
 using Microsoft.Extensions.DependencyInjection;
 using OpenAI.Chat;
 using System.Collections.ObjectModel;
@@ -88,6 +89,10 @@ public class MainWindowViewModel(
     IServiceProvider _serviceProvider,
     ChatClient _chatClient) : NotifyableClass, IMainWindowViewModel
 {
+    #region "Member Variables"
+    readonly Markdown markdown = new Markdown();
+    #endregion
+
     #region "IViewModel"
     public Window Window { get; set; }
     #endregion
@@ -188,7 +193,6 @@ public class MainWindowViewModel(
     {
         if (this.SelectedChat == null) { return Task.CompletedTask; }
 
-        //this.ChatHistory.Remove(this.SelectedChat);
         this.ChatHistory.Remove(clickedChatHistory);
 
         return Task.CompletedTask;

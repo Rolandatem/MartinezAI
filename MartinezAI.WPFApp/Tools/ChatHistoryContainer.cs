@@ -1,4 +1,5 @@
 ﻿using MartinezAI.WPFApp.ExtensionMethods;
+using MdXaml;
 using OpenAI.Chat;
 using System.Collections.ObjectModel;
 
@@ -6,6 +7,10 @@ namespace MartinezAI.WPFApp.Tools;
 
 public class ChatHistoryContainer
 {
+    #region "Member Variables"
+    readonly Markdown markdown = new Markdown();
+    #endregion
+
     #region "Public Properties"
     public string ChatTitle { get; set; }
     public string ChatContext { get; set; }

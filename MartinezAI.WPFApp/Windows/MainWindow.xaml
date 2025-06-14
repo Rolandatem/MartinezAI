@@ -204,13 +204,13 @@
                 <!-- USER INPUT -->
                 <TextBox x:Name="txtUserInput" 
                              Grid.Row="0"
-                             Height="75"
-                             AcceptsTab="True" 
+                             Height="150"
+                             AcceptsTab="True"
+                             AcceptsReturn="True"
                              VerticalScrollBarVisibility="Auto"
                              Text="{Binding UserInput, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}">
                     <TextBox.InputBindings>
-                        <KeyBinding Key="Enter" Command="{Binding SendMessageCommand}" />
-                        <KeyBinding Gesture="Shift+Return" Command="{Binding NewLineCommand}" CommandParameter="{Binding ElementName=txtUserInput, Mode=OneWay}" />
+                        <KeyBinding Modifiers="Shift" Key="Return" Command="{Binding SendMessageCommand}" />
                     </TextBox.InputBindings>
                 </TextBox>
             </Grid>

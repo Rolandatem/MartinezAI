@@ -2,5 +2,5 @@
 
 internal class SystemSettings
 {
-    public string OpenAIKey { get; set; }
+    public required string OpenAIKey { get; set; }
 }

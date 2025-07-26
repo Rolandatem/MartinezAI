@@ -1,0 +1,56 @@
+﻿<Window x:Class="MartinezAI.WPFApp.Forms.Dialogs.NewThreadDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:MartinezAI.WPFApp.Forms.Dialogs"
+        xmlns:vm="clr-namespace:MartinezAI.WPFApp.ViewModels.Dialogs"
+        mc:Ignorable="d"
+        WindowStartupLocation="CenterOwner"
+        WindowStyle="None"
+        SizeToContent="WidthAndHeight"
+        Width="300"
+        Background="{DynamicResource AppBackgroundBrush}"
+        d:DataContext="{d:DesignInstance vm:NewThreadDialogViewModel, IsDesignTimeCreatable=True}">
+
+    <Border Background="{DynamicResource SurfaceBrush}"
+            Padding="10"
+            Margin="10">
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+            </Grid.RowDefinitions>
+
+            <TextBlock Grid.Row="0"
+                       Text="New Thread Name"
+                       Foreground="{DynamicResource MainFontForegroundBrush}"
+                       FontSize="14"/>
+
+            <TextBox Grid.Row="1"
+                     Text="{Binding NewThreadName}"
+                     Background="{DynamicResource InputBackgroundBrush}"
+                     Foreground="{DynamicResource InputForegroundBrush}"
+                     FontSize="14"
+                     Padding="8"
+                     Margin="0,2,0,0"/>
+
+            <StackPanel Grid.Row="2"
+                        Orientation="Horizontal"
+                        HorizontalAlignment="Right"
+                        Margin="0,10,0,0">
+                <Button Content="Create"
+                        Style="{DynamicResource RoundedButtonStyle}"
+                        Command="{Binding OnCreateCommand}"
+                        Width="100"/>
+                <Button Content="Cancel"
+                        Style="{DynamicResource RoundedButtonStyle}"
+                        Command="{Binding OnCancelCommand}"
+                        Width="100"
+                        Margin="10,0,0,0"/>
+            </StackPanel>
+        </Grid>
+    </Border>
+    
+</Window>

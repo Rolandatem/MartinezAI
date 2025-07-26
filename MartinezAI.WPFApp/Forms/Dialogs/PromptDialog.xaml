@@ -1,0 +1,49 @@
+﻿<Window x:Class="MartinezAI.WPFApp.Forms.Dialogs.PromptDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:MartinezAI.WPFApp.Forms.Dialogs"
+        xmlns:vm="clr-namespace:MartinezAI.WPFApp.ViewModels.Dialogs"
+        mc:Ignorable="d"
+        MaxWidth="600"
+        SizeToContent="WidthAndHeight"
+        Title="PromptDialog"
+        WindowStartupLocation="CenterOwner"
+        WindowStyle="None"
+        d:DataContext="{d:DesignInstance vm:PromptDialogViewModel, IsDesignTimeCreatable=True}">
+
+    <Border BorderBrush="{DynamicResource ContainerBorderBrush}" 
+            BorderThickness="1" 
+            CornerRadius="10" 
+            Padding="24" 
+            Background="{DynamicResource CardBrush}">
+        <StackPanel>
+            <!-- Message -->
+            <TextBlock Text="{Binding PromptMessage}" 
+                       Foreground="{DynamicResource MainFontForegroundBrush}" 
+                       FontSize="16" 
+                       TextWrapping="Wrap"
+                       MaxHeight="150"
+                       HorizontalAlignment="Stretch"
+                       ScrollViewer.VerticalScrollBarVisibility="Auto"
+                       Margin="0,0,0,24"/>
+
+            <!-- Buttons -->
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" >
+                <Button Content="{Binding YesButtonText}"
+                        Style="{DynamicResource RoundedButtonStyle}"
+                        Margin="0,0,12,0"
+                        MinWidth="84"
+                        Command="{Binding OnYesCommand}"/>
+                <Button Content="{Binding NoButtonText}"
+                        Style="{DynamicResource RoundedButtonStyle}"
+                        MinWidth="84"
+                        Command="{Binding OnNoCommand}"
+                        Background="{DynamicResource SurfaceBrush}"
+                        Foreground="{DynamicResource MainFontForegroundBrush}"/>
+            </StackPanel>
+        </StackPanel>
+    </Border>
+    
+</Window>

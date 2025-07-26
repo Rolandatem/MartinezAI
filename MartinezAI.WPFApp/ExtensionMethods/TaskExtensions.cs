@@ -1,12 +1,12 @@
 ﻿using MartinezAI.WPFApp.Interfaces;
 
-namespace MartinezAI.WPFApp.ExtensionMethods;
+namespace MartinezAI.WPFApp;
 
 public static class TaskExtensions
 {
     public static async void FireAndForgetSafeAsync(
         this Task task,
-        IErrorHandler errorHandler)
+        IErrorHandler? errorHandler)
     {
         try
         {

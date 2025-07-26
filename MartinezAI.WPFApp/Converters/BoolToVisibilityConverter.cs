@@ -9,7 +9,7 @@ internal class BoolToVisibilityConverter : IValueConverter
     public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
     {
         bool boolValue = (bool)value;
-        string paramValue = parameter != null ? parameter.ToString() : null;
+        string? paramValue = parameter?.ToString();
 
         if (boolValue == true)
         {

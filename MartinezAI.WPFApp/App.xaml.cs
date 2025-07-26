@@ -1,11 +1,16 @@
-﻿using MartinezAI.WPFApp.Settings;
-using MartinezAI.WPFApp.ViewModels;
-using MartinezAI.WPFApp.Windows;
-using MartinezAI.WPFApp.Windows.Dialogs;
+﻿using CefSharp.Wpf;
+using MartinezAI.Data;
+using MartinezAI.WPFApp.Forms.Dialogs;
+using MartinezAI.WPFApp.Forms.UserControls;
+using MartinezAI.WPFApp.Forms.Windows;
+using MartinezAI.WPFApp.Interfaces;
+using MartinezAI.WPFApp.Settings;
+using MartinezAI.WPFApp.Tools;
+using MartinezAI.WPFApp.ViewModels.Dialogs;
+using MartinezAI.WPFApp.ViewModels.UserControls;
+using MartinezAI.WPFApp.ViewModels.Windows;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Options;
-using OpenAI.Chat;
 using System.Windows;
 
 namespace MartinezAI.WPFApp;
@@ -22,18 +27,28 @@ public partial class App : Application
 
         ServiceProvider serviceProvider = serviceCollection.BuildServiceProvider();
 
+        ServiceHelper.Services = serviceProvider;
+
         MainWindow mainWindow = serviceProvider.GetRequiredService<MainWindow>();
         mainWindow.Show();
     }
+
+    protected override void OnStartup(StartupEventArgs e)
+    {
+        base.OnStartup(e);
+
+        CefSettings settings = new CefSettings();
+        settings.LogSeverity = CefSharp.LogSeverity.Info;
+    }
 }
 
-public static class ServicecCollectionExtensions
+public static class ServiceCollectionExtensions
 {
     public static void ConfigureServices(this IServiceCollection services)
     {
         //--Configuration
         IConfiguration config = new ConfigurationBuilder()
-            .AddJsonFile("settings/appsettings.json", false, true)
+            .AddJsonFile("settings/appsettings.json")
             .Build();
         services.AddSingleton<IConfiguration>(config);
 
@@ -41,30 +56,56 @@ public static class ServicecCollectionExtensions
         services
             .Configure<SystemSettings>(config.GetSection("SystemSettings"));
 
-        //--OpenAIKey
-        services
-            .AddSingleton<ChatClient>((services) =>
-            {
-                IOptions<SystemSettings> settings = services.GetRequiredService<IOptions<SystemSettings>>();
-                return new ChatClient(
-                    "gpt-4.1",
-                    settings.Value.OpenAIKey);
-            });
+        //--DbContext
+        services.AddDbContext<MartinezAIDbContext>(ServiceLifetime.Transient);
+        //----Stored procedures
+        services.AddTransient<StoredProcedures>();
 
-        //--Windows
+        //--Custom services
         services
-            .AddSingleton<MainWindow>();
+            .AddSingleton<ISystemData, SystemData>()
+            .AddSingleton<IHashingService, HashingService>()
+            .AddTransient<IDialogService, DialogService>()
+            .AddTransient<IOpenAIService, OpenAIService>()
+            .AddTransient<IUserService, UserService>()
+            .AddSingleton<IMarkupToHtmlConverter, MarkupToHtmlConverter>();
 
-        //--Dialogs
+        //--Forms & ViewModels
         services
-            .AddTransient<CreateChatDialog>();
+            .AddTransient<MessageBoxDialog>()
+            .AddTransient<MessageBoxDialogViewModel>()
 
-        //--ViewModels
-        services
-            //--Windows
-            .AddSingleton<IMainWindowViewModel, MainWindowViewModel>()
+            .AddTransient<PromptDialog>()
+            .AddTransient<PromptDialogViewModel>()
+
+            .AddSingleton<MainWindow>()
+            .AddSingleton<MainWindowViewModel>()
+
+            .AddTransient<LoginUC>()
+            .AddTransient<LoginUCViewModel>()
             
-            //--Dialogs
-            .AddTransient<ICreateChatDialogViewModel, CreateChatDialogViewModel>();
+            .AddTransient<WorkspaceUC>()
+            .AddTransient<WorkspaceUCViewModel>()
+            
+            .AddTransient<UpsertAssistantDialog>()
+            .AddTransient<UpsertAssistantDialogViewModel>()
+            
+            .AddTransient<ChangePasswordDialog>()
+            .AddTransient<ChangePasswordDialogViewModel>()
+            
+            .AddTransient<EditUsersUC>()
+            .AddTransient<EditUsersUCViewModel>()
+            
+            .AddTransient<CreateUserDialog>()
+            .AddTransient<CreateUserDialogViewModel>()
+            
+            .AddTransient<AssistantChatUC>()
+            .AddTransient<AssistantChatUCViewModel>()
+            
+            .AddTransient<NewThreadDialog>()
+            .AddTransient<NewThreadDialogViewModel>()
+            
+            .AddTransient<ChatLogUC>()
+            .AddTransient<ChatLogUCViewModel>();
     }
 }

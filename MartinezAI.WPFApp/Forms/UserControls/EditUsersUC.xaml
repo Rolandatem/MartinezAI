@@ -1,0 +1,143 @@
+﻿<UserControl x:Class="MartinezAI.WPFApp.Forms.UserControls.EditUsersUC"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:local="clr-namespace:MartinezAI.WPFApp.Forms.UserControls"
+             xmlns:vm="clr-namespace:MartinezAI.WPFApp.ViewModels.UserControls"
+             mc:Ignorable="d" 
+             d:DesignHeight="450" d:DesignWidth="800"
+             d:DataContext="{d:DesignInstance vm:EditUsersUCViewModel, IsDesignTimeCreatable=True}"
+             Background="{DynamicResource AppBackgroundBrush}">
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <!-- HEADER AND REFRESH -->
+        <Grid Grid.Row="0">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+
+            <TextBlock Grid.Column="0"
+                       Text="Users"
+                       Margin="10,0,0,0"
+                       Foreground="{DynamicResource MainFontForegroundBrush}"
+                       FontWeight="Bold"
+                       FontSize="25"/>
+
+            <Button Grid.Column="1"
+                    Content="Refresh"
+                    Width="100"
+                    Margin="0,0,10,0"
+                    Style="{StaticResource RoundedButtonStyle}" 
+                    Command="{Binding OnRefreshUsersCommand, Mode=OneWay}" />
+        </Grid>
+        
+        <!-- CREATE USER -->
+        <Button Grid.Row="2"
+                Content="Create User"
+                Margin="0,10,10,10"
+                Style="{DynamicResource RoundedButtonStyle}"
+                Width="100"
+                HorizontalAlignment="Right" 
+                Command="{Binding OnCreateUserCommand, Mode=OneWay}" />
+
+        <!-- USER LIST -->
+        <DataGrid Grid.Row="1"
+                  ItemsSource="{Binding Users}" 
+                  SelectedItem="{Binding SelectedUser}"
+                  AutoGenerateColumns="False"
+                  Background="{DynamicResource SurfaceBrush}"
+                  HeadersVisibility="Column"
+                  CanUserAddRows="False"
+                  IsReadOnly="True"
+                  BorderThickness="0"
+                  RowHeight="40"
+                  Margin="10"
+                  HorizontalAlignment="Center">
+
+            <!-- Customize Header Style -->
+            <DataGrid.ColumnHeaderStyle>
+                <Style TargetType="DataGridColumnHeader">
+                    <Setter Property="Background" Value="{DynamicResource PanelBackgroundBrush}"/>
+                    <Setter Property="Foreground" Value="{DynamicResource MainFontForegroundBrush}"/>
+                    <Setter Property="FontSize" Value="14"/>
+                    <Setter Property="Padding" Value="5"/>
+                </Style>
+            </DataGrid.ColumnHeaderStyle>
+
+            <!-- Customize Cell Style -->
+            <DataGrid.CellStyle>
+                <Style TargetType="{x:Type DataGridCell}">
+                    <Setter Property="Background" Value="{DynamicResource CardBrush}" />
+                    <Setter Property="Foreground" Value="{DynamicResource MainFontForegroundBrush}" />
+                    <Setter Property="FontSize" Value="14" />
+                    <Setter Property="BorderBrush" Value="{DynamicResource SurfaceBrush}" />
+                    <Style.Triggers>
+                        <Trigger Property="IsSelected" Value="True">
+                            <Setter Property="Background" Value="{DynamicResource PrimaryAccentBrush}" />
+                        </Trigger>
+                        <Trigger Property="IsSelected" Value="False">
+                            <Setter Property="Background" Value="{DynamicResource CardBrush}" />
+                        </Trigger>
+                    </Style.Triggers>
+                </Style>
+            </DataGrid.CellStyle>
+
+            <DataGrid.Resources>
+                <Style TargetType="TextBlock" x:Key="GridTextColumnStyle">
+                    <Setter Property="VerticalAlignment" Value="Center" />
+                    <Setter Property="Margin" Value="10,0,0,0" />
+                </Style>
+            </DataGrid.Resources>
+
+            <DataGrid.Columns>
+                <DataGridTextColumn Header="Email" Binding="{Binding Email}" Width="*" ElementStyle="{StaticResource GridTextColumnStyle}"/>
+                <DataGridTextColumn Header="First Name" Binding="{Binding FirstName}" Width="*" ElementStyle="{StaticResource GridTextColumnStyle}"/>
+                <DataGridTextColumn Header="Last Name" Binding="{Binding LastName}" Width="*" ElementStyle="{StaticResource GridTextColumnStyle}"/>
+
+                <!-- Is Admin Column with Toggle Switch -->
+                <DataGridTemplateColumn Header="Is Admin" Width="*">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center" HorizontalAlignment="Center">
+                                <TextBlock Text="No" VerticalAlignment="Center" Margin="0,0,5,0" Foreground="{DynamicResource SecondaryFontBrush}"/>
+                                <ToggleButton IsChecked="{Binding IsAdmin, Mode=TwoWay}" 
+                                              Style="{StaticResource ToggleSwitchStyle}" 
+                                              VerticalAlignment="Center" 
+                                              Command="{Binding DataContext.OnToggleIsAdminCommand, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type local:EditUsersUC}}}"
+                                              CommandParameter="{Binding}"/>
+                                <TextBlock Text="Yes" VerticalAlignment="Center" Margin="5,0,0,0" Foreground="{DynamicResource SecondaryFontBrush}"/>
+                            </StackPanel>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+
+                <!-- Actions Column -->
+                <DataGridTemplateColumn Header="Actions" Width="*">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                                <Button Content="Reset Password"
+                                    Command="{Binding DataContext.OnResetUserPasswordCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" 
+                                    CommandParameter="{Binding}"
+                                    Style="{StaticResource LinkButtonStyle}" Margin="5,0"/>
+                                <Button Content="Delete"
+                                    Command="{Binding DataContext.OnDeleteUserCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" 
+                                    CommandParameter="{Binding}"
+                                    Style="{StaticResource LinkButtonStyle}" Margin="5,0"/>
+                            </StackPanel>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+            </DataGrid.Columns>
+        </DataGrid>
+    </Grid>
+
+</UserControl>

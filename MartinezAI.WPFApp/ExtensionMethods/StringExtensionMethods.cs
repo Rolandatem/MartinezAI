@@ -1,45 +1,38 @@
-﻿namespace MartinezAI.WPFApp.ExtensionMethods;
+﻿namespace MartinezAI.WPFApp;
 
-public static class StringExtensionMethods
+internal static class StringExtensionMethods
 {
+    public static string? Clean(this string value)
+    {
+        if (value != null) { return value.Trim();  }
+        return null;
+    }
+
     public static bool IsEmpty(this string value)
     {
         return String.IsNullOrWhiteSpace(value);
     }
 
-    public static bool HasValue(this string value)
+    public static bool Exists(this string value)
     {
         return !value.IsEmpty();
     }
 
-    public static string NullIfEmpty(this string value)
+    public static string? NullIfEmpty(this string value)
     {
-        if (String.IsNullOrWhiteSpace(value)) { return null; }
-
-        return value.Clean();
+        if (value.IsEmpty()) { return null; }
+        return value;
     }
 
     public static string EmptyIfNull(this string value)
     {
-        if (String.IsNullOrWhiteSpace(value)) { return String.Empty; }
-
-        return value.Clean();
+        if (value == null) { return String.Empty; }
+        return value;
     }
 
-    public static string ValueIfEmptyOrNull(this string value, string defaultValue)
+    public static string? ValueIfEmptyOrNull(this string value, string? defaultValue)
     {
         if (value.IsEmpty()) { return defaultValue; }
-
-        return value.Clean();
-    }
-
-    public static string Clean(this string value)
-    {
-        if (value != null)
-        {
-            return value.Trim();
-        }
-
-        return null;
+        return value;
     }
 }

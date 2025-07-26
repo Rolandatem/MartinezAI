@@ -1,0 +1,245 @@
+﻿<UserControl x:Class="MartinezAI.WPFApp.Forms.UserControls.AssistantChatUC"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:local="clr-namespace:MartinezAI.WPFApp.Forms.UserControls"
+             xmlns:converters="clr-namespace:MartinezAI.WPFApp.Converters"
+             xmlns:vm="clr-namespace:MartinezAI.WPFApp.ViewModels.UserControls"
+             xmlns:fa="http://schemas.fontawesome.io/icons/"
+             mc:Ignorable="d" 
+             d:DesignHeight="450" d:DesignWidth="800"
+             d:DataContext="{d:DesignInstance vm:AssistantChatUCViewModelDesign, IsDesignTimeCreatable=True}"
+             Background="{DynamicResource AppBackgroundBrush}">
+
+    <UserControl.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="/ResourceDictionaries/FontAwesomeStyles.xaml" />
+            </ResourceDictionary.MergedDictionaries>
+
+            <converters:BoolToBrushConverter x:Key="boolToBrushConverter" />
+            <converters:ViewModelToViewConverter x:Key="viewModelToViewConverter" />
+            <converters:MessageCountToVisibilityConverter x:Key="messageCountToVisibilityConverter" />
+        </ResourceDictionary>        
+    </UserControl.Resources>
+
+    <Border Background="{DynamicResource SurfaceBrush}"
+            Padding="10"
+            CornerRadius="8"
+            Margin="10">
+
+        <Grid>
+            <Grid.RowDefinitions>
+                <!-- ASSITANT INFO -->
+                <RowDefinition Height="Auto" />
+                <!-- CONVERSATION THREADS -->
+                <RowDefinition Height="*" />
+                <!-- USER INPUT -->
+                <RowDefinition Height="Auto" />
+                <!-- BOTTOM ACTIONS -->
+                <RowDefinition Height="Auto" />
+            </Grid.RowDefinitions>
+
+            <!-- ASSISTANT INFO -->
+            <StackPanel Grid.Row="0">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+
+                    <TextBlock Grid.Column="0"
+                           Text="{Binding Assistant.Name}"
+                           FontSize="25"
+                           FontWeight="Bold"
+                           Foreground="{DynamicResource MainFontForegroundBrush}"
+                           VerticalAlignment="Bottom"/>
+
+                    <TextBlock Grid.Column="1"
+                           VerticalAlignment="Bottom"
+                           Foreground="{DynamicResource MainFontForegroundBrush}">
+                    <Run Text="Temperature:" />
+                    <Run Text="{Binding Assistant.Temperature, Mode=OneWay, StringFormat=[{0:F4}]}"
+                         Foreground="{DynamicResource SecondaryFontBrush}"
+                         FontWeight="Bold" />
+                    </TextBlock>
+                </Grid>
+
+                <Border Margin="0,5,0,0"
+                        Padding="10"
+                        Background="{DynamicResource PanelBackgroundBrush}">
+                    <StackPanel>
+                        <TextBlock Text="Assistant Instructions:"
+                                   Foreground="{DynamicResource MainFontForegroundBrush}"
+                                   FontSize="14"/>
+                        <TextBlock Text="{Binding Assistant.Instructions}"
+                                   TextWrapping="Wrap"
+                                   Margin="0,5,0,0"
+                                   MaxHeight="74"
+                                   ScrollViewer.VerticalScrollBarVisibility="Auto"
+                                   Foreground="{DynamicResource SecondaryFontBrush}"/>
+                    </StackPanel>
+                </Border>
+            </StackPanel>
+            
+            <!-- CONVERSATION THREADS -->
+            <Grid Grid.Row="1"
+                  Margin="0,5,0,0">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="*" />
+                </Grid.RowDefinitions>
+
+                <Grid Grid.Row="0">
+                    <TextBlock Text="AI Threads"
+                               Foreground="{DynamicResource MainFontForegroundBrush}"
+                               FontSize="16"/>
+
+                    <Button Content="New Thread"
+                            Style="{DynamicResource LinkButtonStyle}"
+                            HorizontalAlignment="Right" 
+                            Command="{Binding OnNewThreadCommand, Mode=OneWay}" />
+                </Grid>
+
+                <TabControl Grid.Row="1"
+                            ItemsSource="{Binding Threads}"
+                            SelectedItem="{Binding SelectedThread}"
+                            Margin="0,5,0,0"
+                            Background="{DynamicResource PanelBackgroundBrush}"
+                            BorderBrush="{DynamicResource ContainerBorderBrush}"
+                            BorderThickness="1,0,1,1">
+                    <TabControl.ItemContainerStyle>
+                        <Style TargetType="TabItem" BasedOn="{StaticResource MainTabControlStyle}">
+                            <Setter Property="Header" Value="{Binding ThreadName}" />
+                        </Style>
+                    </TabControl.ItemContainerStyle>
+                    <TabControl.ContentTemplate>
+                        <DataTemplate>
+                            <Grid>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="*" />
+                                </Grid.RowDefinitions>
+
+                                <StackPanel Grid.Row="0"
+                                            Margin="0,5,5,0"
+                                            Orientation="Horizontal"
+                                            HorizontalAlignment="Right">
+
+                                    <Button Content="Load Previous Messages"
+                                            Margin="0,0,10,0"
+                                            Style="{DynamicResource LinkButtonStyle}"
+                                            Command="{Binding DataContext.OnLoadPreviousMessagesCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                            Visibility="{Binding DataContext.ChatLogControl.ChatLogMessages.Count, RelativeSource={RelativeSource AncestorType=UserControl}, Converter={StaticResource messageCountToVisibilityConverter}}"/>
+
+                                    <Button Grid.Row="0"
+                                            Content="Delete Thread"
+                                            Style="{DynamicResource LinkButtonStyle}"
+                                            HorizontalAlignment="Right"
+                                            Command="{Binding DataContext.OnDeleteThreadCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"/>
+
+                                </StackPanel>
+
+                                <Border Grid.Row="1"
+                                        Margin="10"
+                                        Padding="10"
+                                        CornerRadius="8"
+                                        Background="{DynamicResource DarkBrush}">
+                                    <ContentControl Content="{Binding DataContext.ChatLogControl, RelativeSource={RelativeSource AncestorType=UserControl}, Converter={StaticResource viewModelToViewConverter}}" />
+                                </Border>
+                            </Grid>
+                        </DataTemplate>
+                    </TabControl.ContentTemplate>
+                </TabControl>
+            </Grid>
+            
+            <!-- USER INPUT -->
+            <Border Grid.Row="2"
+                    Margin="0,10,0,0"
+                    Background="{DynamicResource DarkBrush}"
+                    BorderBrush="{DynamicResource ContainerBorderBrush}"
+                    BorderThickness="1"
+                    CornerRadius="8">
+                <TextBox Text="{Binding UserInput, UpdateSourceTrigger=PropertyChanged}"
+                         Background="Transparent"
+                         AcceptsReturn="True"
+                         AcceptsTab="True"
+                         Foreground="{DynamicResource InputForegroundBrush}"
+                         VerticalScrollBarVisibility="Auto"
+                         MaxHeight="100"
+                         Padding="10"
+                         FontSize="14"
+                         BorderThickness="0" TextWrapping="Wrap"
+                         CaretBrush="White">
+                    <TextBox.Style>
+                        <Style TargetType="TextBox">
+                            <Setter Property="IsEnabled" Value="True"/>
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding SelectedThread}" Value="{x:Null}">
+                                    <Setter Property="IsEnabled" Value="False"/>
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </TextBox.Style>
+                    <TextBox.InputBindings>
+                        <KeyBinding Key="Return"
+                                    Modifiers="Ctrl"
+                                    Command="{Binding OnRunCommand}" />
+                    </TextBox.InputBindings>
+                </TextBox>
+            </Border>
+            
+            <!-- BOTTOM ACTIONS -->
+            <Grid Grid.Row="3"
+                  Margin="0,10,0,0">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+
+                <!-- LEFT ACTIONS -->
+                <StackPanel Grid.Column="0"
+                            Orientation="Horizontal">
+                    <Button ToolTip="Attach File"
+                            Style="{StaticResource IconButtonStyle}">
+                        <fa:ImageAwesome Icon="Paperclip" 
+                                         Height="15"
+                                         Style="{DynamicResource FontAwesomeChatIcons}"/>
+                    </Button>
+
+                    <Button ToolTip="Upload Image"
+                            Style="{StaticResource IconButtonStyle}">
+                        <fa:ImageAwesome Icon="Image" 
+                                         Height="15"
+                                         Margin="10,0,0,0"
+                                         Style="{DynamicResource FontAwesomeChatIcons}"/>
+                    </Button>
+                </StackPanel>
+
+                <!-- RIGHT ACTIONS -->
+                <StackPanel Grid.Column="1"
+                            Orientation="Horizontal"
+                            HorizontalAlignment="Right">
+                    <Button Content="Add Message"
+                            Padding="10,3"
+                            Style="{DynamicResource RoundedButtonStyle}" 
+                            Command="{Binding OnAddMessageCommand, Mode=OneWay}" />
+
+                    <Button Margin="10,0,0,0"
+                            Padding="10,3"
+                            Style="{DynamicResource RoundedButtonStyle}"
+                            Command="{Binding OnRunCommand, Mode=OneWay}">
+                        <TextBlock>
+                            <Run Text="Run" />
+                            <Run Text="(CTRL+Enter)"
+                                 FontSize="10" />
+                        </TextBlock>
+                    </Button>
+                </StackPanel>
+            </Grid>
+        </Grid>
+
+    </Border>
+
+</UserControl>

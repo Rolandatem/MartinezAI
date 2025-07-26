@@ -1,0 +1,143 @@
+﻿<Window x:Class="MartinezAI.WPFApp.Forms.Dialogs.UpsertAssistantDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:vm="clr-namespace:MartinezAI.WPFApp.ViewModels.Dialogs"
+        xmlns:converters="clr-namespace:MartinezAI.WPFApp.Converters"
+        Title="{Binding DialogTitle}"
+        Width="500"
+        SizeToContent="Height"
+        WindowStartupLocation="CenterOwner"
+        Background="{DynamicResource AppBackgroundBrush}"
+        ResizeMode="NoResize"
+        WindowStyle="SingleBorderWindow"
+        mc:Ignorable="d"
+        d:DataContext="{d:DesignInstance vm:UpsertAssistantDialogViewModel, IsDesignTimeCreatable=True}">
+
+    <Window.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="/ResourceDictionaries/AssistantSliderStyle.xaml" />
+            </ResourceDictionary.MergedDictionaries>
+            
+            <converters:BoolToVisibilityConverter x:Key="boolToVisibilityConverter" />
+        </ResourceDictionary>
+    </Window.Resources>
+
+    <Border 
+        Background="{DynamicResource SurfaceBrush}"
+        CornerRadius="12"
+        Padding="32"
+        Margin="18">
+        <StackPanel>
+
+            <!-- Name -->
+            <TextBlock Text="Assistant Name"
+                       Margin="2,0,0,2"
+                       FontSize="15"
+                       Foreground="{DynamicResource SecondaryFontBrush}"/>
+            <TextBox Text="{Binding AssistantName}"
+                     Margin="0,0,0,12"
+                     FontSize="16"
+                     Background="{DynamicResource InputBackgroundBrush}"
+                     Foreground="{DynamicResource InputForegroundBrush}"
+                     BorderBrush="{DynamicResource ContainerBorderBrush}"
+                     Padding="8"
+                     HorizontalAlignment="Stretch"
+                     x:Name="NameTextBox"/>
+
+            <!-- System Message -->
+            <TextBlock Text="Assistant instructions (personality/goals/role)"
+                       Margin="2,0,0,2"
+                       FontSize="15"
+                       Foreground="{DynamicResource SecondaryFontBrush}"/>
+            <TextBox Text="{Binding SystemMessage}"
+                     AcceptsReturn="True"
+                     Height="70"
+                     Margin="0,0,0,7"
+                     FontSize="15"
+                     Background="{DynamicResource InputBackgroundBrush}"
+                     Foreground="{DynamicResource InputForegroundBrush}"
+                     BorderBrush="{DynamicResource ContainerBorderBrush}"
+                     Padding="8"
+                     HorizontalAlignment="Stretch"
+                     VerticalScrollBarVisibility="Auto"
+                     x:Name="SystemMessageTextBox" TextWrapping="Wrap"/>
+
+            <!-- Concise Responses Checkbox -->
+            <CheckBox IsChecked="{Binding ShortAndConcise}" Margin="0,0,0,16"
+                      Foreground="{DynamicResource MainFontForegroundBrush}"
+                      x:Name="ConciseCheckBox"
+                      VerticalAlignment="Center">
+                <TextBlock Text="Prefer short, concise responses" FontSize="13"/>
+            </CheckBox>
+
+            <!-- Temperature Slider -->
+            <TextBlock Text="Response Style" FontSize="15"
+                       Margin="2,0,0,2"
+                       Foreground="{DynamicResource SecondaryFontBrush}"/>
+            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                <TextBlock Text="More predictable"
+                           Width="102"
+                           VerticalAlignment="Center"
+                           Foreground="{DynamicResource SecondaryFontBrush}"
+                           FontSize="13"/>
+                <Slider x:Name="TemperatureSlider"
+                        Value="{Binding Temperature}"
+                        Style="{StaticResource AssistantSliderStyle}"
+                        Margin="8,0"
+                        Width="112"/>
+                <TextBlock Text="More creative"
+                           Width="90"
+                           VerticalAlignment="Center"
+                           Foreground="{DynamicResource SecondaryFontBrush}"
+                           FontSize="13"/>
+            </StackPanel>
+            <TextBlock Text="(Adjust to control how creative the assistant's responses are.)"
+                       FontSize="12"
+                       Margin="2,0,0,10"
+                       Foreground="{DynamicResource DisabledBrush}"/>
+
+            <!-- Max Tokens -->
+            <!--<TextBlock Text="Maximum response size (tokens, optional)"
+                       Margin="2,4,0,2"
+                       FontSize="15"
+                       Foreground="{DynamicResource SecondaryFontBrush}"/>
+            <TextBox Text="{Binding MaxTokens}"
+                     Margin="0,0,0,2"
+                     FontSize="15"
+                     Background="{DynamicResource InputBackgroundBrush}"
+                     Foreground="{DynamicResource InputForegroundBrush}"
+                     BorderBrush="{DynamicResource ContainerBorderBrush}"
+                     Padding="8"
+                     Width="120"
+                     HorizontalAlignment="Left"
+                     x:Name="MaxTokensTextBox"/>
+            <TextBlock Text="Each token is about ¾ of a word. If too small, responses may be cut off."
+                       FontSize="12"
+                       Margin="2,0,0,18"
+                       Foreground="{DynamicResource DisabledBrush}"/>-->
+
+            <!-- Action Buttons -->
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                <Button Content="SAVE"
+                        Width="98"
+                        Margin="0,0,12,0"
+                        Style="{DynamicResource RoundedButtonStyle}" 
+                        Command="{Binding OnCreateCommand, Mode=OneWay}"/>
+                <Button Content="CANCEL"
+                        Width="98"
+                        Style="{DynamicResource RoundedButtonStyle}" 
+                        Command="{Binding OnCancelCommand, Mode=OneWay}"/>
+            </StackPanel>
+
+            <!-- Required fields error display -->
+            <TextBlock Text="Assistant Name is required."
+                       Foreground="{DynamicResource ErrorBrush}"
+                       FontSize="15"
+                       Margin="0,10,0,0" 
+                       Visibility="{Binding RequiredFieldsErrorIsVisible, Converter={StaticResource boolToVisibilityConverter}}"/>
+        </StackPanel>
+    </Border>
+</Window>

@@ -6,8 +6,25 @@
     <Application.Resources>
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
-                <ResourceDictionary Source="/Styles/GlobalStyles.xaml" />
+                <ResourceDictionary Source="/ResourceDictionaries/GlobalStyles.xaml" />
+                <ResourceDictionary Source="/ResourceDictionaries/GlobalButton.xaml" />
+                <ResourceDictionary Source="/ResourceDictionaries/IconTemplates.xaml"/>
+                <ResourceDictionary Source="/ResourceDictionaries/TabControlStyles.xaml" />
             </ResourceDictionary.MergedDictionaries>
+
+            <FontFamily x:Key="Font_Roboto">pack://application:,,,/Fonts/#Roboto</FontFamily>
+
+            <Style TargetType="Control">
+                <Setter Property="FontFamily" Value="{StaticResource Font_Roboto}" />
+            </Style>
+            <Style TargetType="TextBlock">
+                <Setter Property="FontFamily" Value="{StaticResource Font_Roboto}" />
+            </Style>
+            <Style TargetType="TextBox">
+                <Setter Property="FontFamily" Value="{StaticResource Font_Roboto}" />
+            </Style>
+
         </ResourceDictionary>
     </Application.Resources>
+    
 </Application>

@@ -1,0 +1,25 @@
+﻿<Window x:Class="MartinezAI.WPFApp.Forms.Windows.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:MartinezAI.WPFApp.Forms.Windows"
+        xmlns:vm="clr-namespace:MartinezAI.WPFApp.ViewModels.Windows"
+        xmlns:converters="clr-namespace:MartinezAI.WPFApp.Converters"
+        xmlns:uc="clr-namespace:MartinezAI.WPFApp.Forms.UserControls"
+        mc:Ignorable="d"
+        WindowState="Maximized"
+        Title="{Binding ApplicationTitle}" Height="450" Width="800"
+        d:DataContext="{d:DesignInstance vm:MainWindowViewModel, IsDesignTimeCreatable=True}"
+        Background="{DynamicResource AppBackgroundBrush}">
+
+    <Window.Resources>
+        <converters:ViewModelToViewConverter x:Key="viewToViewModelConverter" />
+    </Window.Resources>
+
+    <Grid>
+        <ContentControl Content="{Binding CurrentControl, Converter={StaticResource viewToViewModelConverter}}" />
+        <uc:BusyIndicator IsBusy="{Binding FormIsBusy}" />
+    </Grid>
+    
+</Window>

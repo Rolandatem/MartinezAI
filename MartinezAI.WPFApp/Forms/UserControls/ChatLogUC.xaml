@@ -1,0 +1,46 @@
+﻿<UserControl x:Class="MartinezAI.WPFApp.Forms.UserControls.ChatLogUC"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:local="clr-namespace:MartinezAI.WPFApp.Forms.UserControls"
+             xmlns:vm="clr-namespace:MartinezAI.WPFApp.ViewModels.UserControls"
+             xmlns:ap="clr-namespace:MartinezAI.WPFApp.AttachedProperties"
+             xmlns:cef="clr-namespace:CefSharp.Wpf;assembly=CefSharp.Wpf"
+             mc:Ignorable="d" 
+             d:DesignHeight="450" d:DesignWidth="800"
+             d:DataContext="{d:DesignInstance vm:ChatLogUCViewModel, IsDesignTimeCreatable=True}">
+
+    <ScrollViewer VerticalScrollBarVisibility="Auto">
+        <ItemsControl x:Name="ChatLogHistory" 
+                          ItemsSource="{Binding ChatLogMessages}">
+            <ItemsControl.ItemTemplate>
+                <DataTemplate>
+                    <Border Margin="0,5">
+                        <StackPanel>
+                            <Grid Margin="0,0,0,5">
+                                <TextBlock Text="{Binding Owner, StringFormat={}{0}:}"
+                                       FontWeight="Bold"
+                                       Foreground="{DynamicResource MainFontForegroundBrush}"
+                                       FontSize="14" />
+                                <Button Content="&#x2699;"
+                                        HorizontalAlignment="Right"
+                                        Style="{DynamicResource IconButtonStyle}"
+                                        Click="DevTools_Click"/>
+                            </Grid>
+                            <Border BorderBrush="{DynamicResource ContainerBorderBrush}"
+                                    BorderThickness="2"
+                                    CornerRadius="8"
+                                    Padding="5">
+                                <cef:ChromiumWebBrowser ap:CefAttachedProperties.Html="{Binding Content}" 
+                                                        Loaded="ChromiumWebBrowser_Loaded"
+                                                        LoadingStateChanged="ChromiumWebBrowser_LoadingStateChanged"/>
+                            </Border>
+                        </StackPanel>
+                    </Border>
+                </DataTemplate>
+            </ItemsControl.ItemTemplate>
+        </ItemsControl>
+    </ScrollViewer>
+
+</UserControl>

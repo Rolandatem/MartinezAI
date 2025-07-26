@@ -1,0 +1,42 @@
+﻿<UserControl x:Class="MartinezAI.WPFApp.Forms.UserControls.BusyIndicator"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:local="clr-namespace:MartinezAI.WPFApp.Forms.UserControls"
+             xmlns:converters="clr-namespace:MartinezAI.WPFApp.Converters"
+             mc:Ignorable="d" 
+             d:DesignHeight="450" d:DesignWidth="800">
+
+    <UserControl.Resources>
+        <converters:BoolToVisibilityConverter x:Key="boolToVisibilityConverter" />
+    </UserControl.Resources>
+
+    <Grid Visibility="{Binding IsOverlayVisible, RelativeSource={RelativeSource AncestorType=UserControl}, Converter={StaticResource boolToVisibilityConverter}}"
+          Background="#80000000">
+
+        <Border Background="{DynamicResource CardBrush}"
+                CornerRadius="8"
+                Padding="32,24"
+                BorderBrush="{DynamicResource ContainerBorderBrush}"
+                BorderThickness="1"
+                HorizontalAlignment="Center"
+                VerticalAlignment="Center"
+                Width="250">
+            <Border.Effect>
+                <DropShadowEffect Color="Black"
+                                  BlurRadius="16"
+                                  ShadowDepth="2"
+                                  Opacity="0.5"/>
+            </Border.Effect>
+
+            <TextBlock Text="Please wait..."
+                       Foreground="{DynamicResource MainFontForegroundBrush}"
+                       FontSize="15"
+                       HorizontalAlignment="Center"
+                       VerticalAlignment="Center" />
+
+        </Border>
+        
+    </Grid>
+</UserControl>

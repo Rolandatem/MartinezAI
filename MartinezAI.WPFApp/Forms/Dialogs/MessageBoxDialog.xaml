@@ -1,0 +1,60 @@
+﻿<Window x:Class="MartinezAI.WPFApp.Forms.Dialogs.MessageBoxDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:MartinezAI.WPFApp.Forms.Dialogs"
+        xmlns:vm="clr-namespace:MartinezAI.WPFApp.ViewModels.Dialogs"
+        mc:Ignorable="d"
+        MaxWidth="600"
+        WindowStartupLocation="CenterOwner"
+        ResizeMode="NoResize"
+        SizeToContent="WidthAndHeight"
+        Background="{DynamicResource AppBackgroundBrush}"
+        d:DataContext="{d:DesignInstance vm:MessageBoxDialogViewModel, IsDesignTimeCreatable=True}" WindowStyle="None">
+
+    <Border BorderBrush="{DynamicResource ContainerBorderBrush}" BorderThickness="1" CornerRadius="10" Padding="24" Background="{DynamicResource CardBrush}">
+        <Grid>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="16"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+            <Grid.RowDefinitions>
+                <RowDefinition/>
+                <RowDefinition Height="24"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+            <!-- Icon -->
+            <ContentControl Grid.Row="0" Grid.Column="0"
+                            VerticalAlignment="Top"
+                            Width="40" Height="40"
+                            Content="{Binding IconFlag}"
+                            ContentTemplateSelector="{StaticResource IconTemplateSelector}"/>
+            <!-- Message -->
+            <ScrollViewer Grid.Row="0" Grid.Column="2"
+                          MaxHeight="150"
+                          Margin="0,4,0,0"
+                          VerticalScrollBarVisibility="Auto">
+                <TextBlock Grid.Row="0" Grid.Column="2"
+                       Text="{Binding Message}" 
+                       Foreground="{DynamicResource MainFontForegroundBrush}"
+                       FontSize="16"
+                       TextWrapping="Wrap"
+                       ScrollViewer.VerticalScrollBarVisibility="Auto"
+                       VerticalAlignment="Center"/>
+            </ScrollViewer>
+            
+            <!-- Button -->
+            <Button Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="3"
+                    x:Name="OkButton"
+                    Style="{DynamicResource RoundedButtonStyle}"
+                    Padding="28,6"
+                    Content="OK"
+                    Width="100"
+                    Command="{Binding OnCloseCommand, Mode=OneWay}"
+                    HorizontalAlignment="Right"/>
+        </Grid>
+    </Border>
+    
+</Window>

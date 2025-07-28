@@ -5,12 +5,10 @@ using MartinezAI.WPFApp.Forms.Dialogs;
 using MartinezAI.WPFApp.Forms.UserControls;
 using MartinezAI.WPFApp.Forms.Windows;
 using MartinezAI.WPFApp.Interfaces;
-using MartinezAI.WPFApp.Settings;
 using MartinezAI.WPFApp.Tools;
 using MartinezAI.WPFApp.ViewModels.Dialogs;
 using MartinezAI.WPFApp.ViewModels.UserControls;
 using MartinezAI.WPFApp.ViewModels.Windows;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using System.Windows;
 
@@ -53,14 +51,14 @@ public static class ServiceCollectionExtensions
     public static void ConfigureServices(this IServiceCollection services)
     {
         //--Configuration
-        IConfiguration config = new ConfigurationBuilder()
-            .AddJsonFile("settings/appsettings.json")
-            .Build();
-        services.AddSingleton<IConfiguration>(config);
+        //IConfiguration config = new ConfigurationBuilder()
+        //    .AddJsonFile("settings/appsettings.json")
+        //    .Build();
+        //services.AddSingleton<IConfiguration>(config);
 
-        //--Configure options
-        services
-            .Configure<SystemSettings>(config.GetSection("SystemSettings"));
+        ////--Configure options
+        //services
+        //    .Configure<SystemSettings>(config.GetSection("SystemSettings"));
 
         //--DbContext
         services.AddDbContext<MartinezAIDbContext>(ServiceLifetime.Transient);

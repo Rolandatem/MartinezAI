@@ -21,6 +21,7 @@
             <converters:BoolToBrushConverter x:Key="boolToBrushConverter" />
             <converters:ViewModelToViewConverter x:Key="viewModelToViewConverter" />
             <converters:MessageCountToVisibilityConverter x:Key="messageCountToVisibilityConverter" />
+            <converters:RatioToVisibilityConverter x:Key="ratioToVisibilityConverter" />
         </ResourceDictionary>        
     </UserControl.Resources>
 
@@ -121,6 +122,29 @@
                                     <RowDefinition Height="Auto" />
                                     <RowDefinition Height="*" />
                                 </Grid.RowDefinitions>
+
+                                <StackPanel Grid.Row="0"
+                                            Orientation="Horizontal"
+                                            HorizontalAlignment="Left"
+                                            VerticalAlignment="Bottom">
+                                    <TextBlock Foreground="{DynamicResource MainFontForegroundBrush}"
+                                               FontSize="12"
+                                               Margin="5,5,0,0">
+                                        <Run Text="{Binding DataContext.SelectedThreadHistory.TokenCount, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                             Foreground="{Binding DataContext.TokenUsageBrush, RelativeSource={RelativeSource AncestorType=UserControl}}" />
+                                        <Run Text="/" />
+                                        <Run Text="{Binding DataContext.MaxTPM, RelativeSource={RelativeSource AncestorType=UserControl}, Mode=OneWay}" />
+                                        <Run Text=" Tokens Used" />
+                                    </TextBlock>
+                                    <Button Content="Summarize History"
+                                            Margin="10,5,0,0"
+                                            FontSize="12"
+                                            Command="{Binding DataContext.OnSummarizeThreadMessagesCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                            Style="{DynamicResource LinkButtonStyle}" />
+                                    <!--Visibility="{Binding DataContext.TokensRatio,
+                                                                 RelativeSource={RelativeSource AncestorType=UserControl},
+                                                                 Converter={StaticResource ratioToVisibilityConverter}}"/>-->
+                                </StackPanel>
 
                                 <StackPanel Grid.Row="0"
                                             Margin="0,5,5,0"

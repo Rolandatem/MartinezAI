@@ -22,12 +22,15 @@ public interface IOpenAIService
             string threadId,
             string assistantId,
             string? lastMessageid);
-    Task RunThreadStreamingAsync(
+    Task<int> RunThreadStreamingAsync(
         string threadId,
         string assistantId,
         string? lastMessageid,
         ChatLogMessage assistantMessage);
     Task<List<ChatLogMessage>> GetPreviousMessagesAsync(
+        string threadId);
+    Task<ChatSummarizationResult> SummarizeThreadMessagesAsync(
         string threadId,
-        int limit = 10);
+        string assistantId,
+        int retainLimit = 10);
 }

@@ -12,8 +12,9 @@
              d:DataContext="{d:DesignInstance vm:ChatLogUCViewModel, IsDesignTimeCreatable=True}">
 
     <ScrollViewer VerticalScrollBarVisibility="Auto">
-        <ItemsControl x:Name="ChatLogHistory" 
-                          ItemsSource="{Binding ChatLogMessages}">
+        <ItemsControl x:Name="ChatLogHistory"
+                      ItemsSource="{Binding ChatLogMessages}"
+                      Margin="0,0,10,0">
             <ItemsControl.ItemTemplate>
                 <DataTemplate>
                     <Border Margin="0,5">

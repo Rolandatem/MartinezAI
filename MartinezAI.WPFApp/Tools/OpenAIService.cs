@@ -4,7 +4,6 @@ using OpenAI.Assistants;
 using System.ClientModel;
 using System.Text;
 using System.Windows;
-using System.Windows.Controls.Primitives;
 
 namespace MartinezAI.WPFApp.Tools;
 
@@ -210,14 +209,14 @@ internal class OpenAIService : IOpenAIService
         }
     }
 
-    public async Task RunThreadStreamingAsync(
+    public async Task<int> RunThreadStreamingAsync(
         string threadId,
         string assistantId,
         string? lastMessageId,
         ChatLogMessage assistantMessage)
     {
         AssistantClient client = new AssistantClient(Properties.Settings.Default.OpenAIKey);
-        StringBuilder sb = new StringBuilder();
+        int tokenUsedCount = 0;
 
         await foreach (StreamingUpdate? update in client.CreateRunStreamingAsync(threadId, assistantId))
         {
@@ -260,17 +259,18 @@ internal class OpenAIService : IOpenAIService
                 case StreamingUpdateReason.RunCompleted:
                     if (update is RunUpdate runCompletedUpdate)
                     {
-                        int totalTokensUsed = runCompletedUpdate.Value.Usage.TotalTokenCount;
+                        tokenUsedCount = runCompletedUpdate.Value.Usage.TotalTokenCount;
                     }
                     break;
                 default: break;
             }
         }
+
+        return tokenUsedCount;
     }
 
     public async Task<List<ChatLogMessage>> GetPreviousMessagesAsync(
-        string threadId,
-        int limit = 10)
+        string threadId)
     {
         try
         {
@@ -278,10 +278,9 @@ internal class OpenAIService : IOpenAIService
 
             MessageCollectionOptions options = new MessageCollectionOptions()
             {
-                Order = MessageCollectionOrder.Ascending,
-                PageSizeLimit = limit
+                Order = MessageCollectionOrder.Ascending
             };
-
+            
             List<ChatLogMessage> returnMessages = new List<ChatLogMessage>();
             await foreach (ThreadMessage threadMessage in client.GetMessagesAsync(
                 threadId,
@@ -299,11 +298,150 @@ internal class OpenAIService : IOpenAIService
 
             //--Currently there is a bug and the PageSizeLimit is not being properly used. In the meantime
             //--we will just return the last of limit.
-            return [.. returnMessages.Skip(Math.Max(0, returnMessages.Count - limit))];
+            //return [.. returnMessages.Skip(Math.Max(0, returnMessages.Count - limit))];
+            return returnMessages;
         }
         catch (Exception ex)
         {
             throw new Exception("Failed to load previous messages.", ex);
+        }
+    }
+
+    public async Task<ChatSummarizationResult> SummarizeThreadMessagesAsync(
+        string threadId,
+        string assistantId,
+        int retainLimit = 10)
+    {
+        try
+        {
+            AssistantClient client = new AssistantClient(Properties.Settings.Default.OpenAIKey);
+
+            //--Get previous messages
+            MessageCollectionOptions options = new MessageCollectionOptions()
+            {
+                Order = MessageCollectionOrder.Ascending
+            };
+            List<ChatLogMessage> messageList = new List<ChatLogMessage>();
+            await foreach (ThreadMessage threadMessage in client.GetMessagesAsync(
+                threadId,
+                options))
+            {
+                messageList.Add(new ChatLogMessage()
+                {
+                    Owner = threadMessage.Role.ToString() + "|" + threadMessage.Id,
+                    Content = threadMessage.Content.FirstOrDefault()?.Text ?? String.Empty
+                });
+            }
+
+            //--Split messages to where the first contains everything except the last 10
+            //--messages and the second should have the remaining.
+            int splitIdx = Math.Max(0, messageList.Count - retainLimit);
+            if (splitIdx == 0)
+            {
+                throw new Exception($"Not enough messages to consolidate. There must be more than {retainLimit}.");
+            }
+            List<ChatLogMessage> consolidationList = messageList.Take(splitIdx).ToList();
+            List<ChatLogMessage> retentionList = messageList.Skip(splitIdx).ToList();
+
+            //--Create summary request.
+            StringBuilder sb = new StringBuilder();
+            sb.AppendLine(@"Please summarize the content of this chat for consolidation. 
+                5 dashes (-----) marks the beginning of a new message. The next line will be
+                either 'User' for user message, or 'Assistant' for assistant message. The rest of
+                the content will be the message.");
+
+            foreach (ChatLogMessage message in consolidationList)
+            {
+                sb.AppendLine("-----");
+                sb.AppendLine(message.Owner.Split("|")[0]);
+                sb.AppendLine(message.Content);
+            }
+
+            //--Create new thread to make sure there is enough space to use.
+            ClientResult<AssistantThread> newThread = await client.CreateThreadAsync();
+
+            //--Send message with content to summarize using the same assistant for context.
+            ClientResult<ThreadMessage> summaryThreadMessage = await client.CreateMessageAsync(
+                newThread.Value.Id,
+                MessageRole.User,
+                [MessageContent.FromText(sb.ToString())]);
+
+            //--Create a use a 'Run' for the summarizing to happen.
+            sb = new StringBuilder();
+            int newTokenCount = 0;
+            await foreach (StreamingUpdate? update in client.CreateRunStreamingAsync(
+                newThread.Value.Id,
+                assistantId))
+            {
+                switch (update.UpdateKind)
+                {
+                    case StreamingUpdateReason.Error:
+                        throw new Exception($"Error during consolidation: {update}");
+
+                    case StreamingUpdateReason.RunFailed:
+                        if (update is RunUpdate runFailedUpdate)
+                        {
+                            throw new Exception($"Error during consolidation: {runFailedUpdate.Value.LastError?.Message}");
+                        }
+                        break;
+
+                    case StreamingUpdateReason.RunCompleted:
+                        if (update is RunUpdate runCompleteUpdate)
+                        {
+                            newTokenCount = runCompleteUpdate.Value.Usage.TotalTokenCount;
+                        }
+                        break;
+
+                    case StreamingUpdateReason.MessageUpdated:
+                        if (update is MessageContentUpdate contentUpdate)
+                        {
+                            sb.Append(contentUpdate.Text);
+                        }
+                        break;
+
+                    default: break;
+                }
+            }
+
+            //--Now that we have the consolidation, we need to delete the existing messages from
+            //--the thread.
+            List<Task> deleteTasks = new List<Task>();
+            foreach (ChatLogMessage toDelete in messageList)
+            {
+                //ClientResult<MessageDeletionResult> result = await client.DeleteMessageAsync(
+                //    threadId,
+                //    toDelete.Owner.Split("|")[1]);
+                deleteTasks.Add(client.DeleteMessageAsync(
+                    threadId,
+                    toDelete.Owner.Split("|")[1]));
+            }
+            await Task.WhenAll(deleteTasks);
+
+            //--Now for context let's add the consolidated message to the thread.
+            ClientResult<ThreadMessage> addConsolidatedMessage = await client.CreateMessageAsync(
+                threadId,
+                MessageRole.Assistant,
+                [MessageContent.FromText(sb.ToString())]);
+
+            //--Now loop and enter in retained messages
+            string lastMessageId = String.Empty;
+            foreach (ChatLogMessage retainedMessage in retentionList)
+            {
+                ClientResult<ThreadMessage> result = await client.CreateMessageAsync(
+                    threadId,
+                    (MessageRole)Enum.Parse(typeof(MessageRole), retainedMessage.Owner.Split("|")[0]),
+                    [MessageContent.FromText(retainedMessage.Content)]);
+                lastMessageId = retainedMessage.Owner.Split("|")[1];
+            }
+
+            //--Now delete temp thread for cleanup.
+            await client.DeleteThreadAsync(newThread.Value.Id);
+
+            return new ChatSummarizationResult { LastMessageId = lastMessageId, NewTokenCount = newTokenCount };
+        }
+        catch (Exception ex)
+        {
+            throw new Exception("Failed to summarize messages.", ex);
         }
     }
 }

@@ -48,5 +48,17 @@ namespace MartinezAI.WPFApp.Properties {
                 this["OpenAIKey"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("30000")]
+        public int MaxTMP {
+            get {
+                return ((int)(this["MaxTMP"]));
+            }
+            set {
+                this["MaxTMP"] = value;
+            }
+        }
     }
 }

@@ -8,5 +8,8 @@
     <Setting Name="OpenAIKey" Type="System.String" Scope="User">
       <Value Profile="(Default)">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</Value>
     </Setting>
+    <Setting Name="MaxTMP" Type="System.Int32" Scope="User">
+      <Value Profile="(Default)">30000</Value>
+    </Setting>
   </Settings>
 </SettingsFile>

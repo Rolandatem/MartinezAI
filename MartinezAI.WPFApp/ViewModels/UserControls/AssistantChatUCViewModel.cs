@@ -3,8 +3,11 @@ using MartinezAI.WPFApp.Interfaces;
 using MartinezAI.WPFApp.Models;
 using MartinezAI.WPFApp.Tools;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.ML.Tokenizers;
 using OpenAI.Assistants;
 using System.Collections.ObjectModel;
+using System.Text;
+using System.Windows.Media;
 
 namespace MartinezAI.WPFApp.ViewModels.UserControls;
 
@@ -30,16 +33,21 @@ public class AssistantChatUCViewModelDesign : BaseViewModel
 	#endregion
 
 	#region "Form Properties"
+	public Dictionary<string, ThreadHistory> ThreadChatHistory = new Dictionary<string, ThreadHistory>();
 	public DesignAssistant Assistant { get; set; } = new DesignAssistant("Design Assistant", "Design Instructions", 1.0F);
 	public ObservableCollection<UserAssistantThread> Threads { get; } = 
 		[
 			new UserAssistantThread() { ThreadName = "Thread 1", AssistantId = "123", ThreadId = "123"},
-			new UserAssistantThread() { ThreadName = "Thread 2", AssistantId = "123", ThreadId = "123"},
-			new UserAssistantThread() { ThreadName = "Thread 3", AssistantId = "123", ThreadId = "123"},
+			new UserAssistantThread() { ThreadName = "Thread 2", AssistantId = "123", ThreadId = "1234"},
+			new UserAssistantThread() { ThreadName = "Thread 3", AssistantId = "123", ThreadId = "1235"},
 		];
 	public UserAssistantThread? SelectedThread { get; set; }
+	public ThreadHistory? SelectedThreadHistory { get; set; }
 	public object ChatLogControl => new ChatLogUCViewModel();
 	public string UserInput { get; set; }= "[USER_INPUT]";
+	public double TokensRatio => 0.6F;
+	public Brush TokenUsageBrush => (Brush)App.Current.Resources["MainFontForegroundBrush"];
+	public int MaxTPM => 30000;
 	#endregion
 
 	#region "Constructor"
@@ -54,6 +62,7 @@ public class AssistantChatUCViewModelDesign : BaseViewModel
 	public AsyncCommand OnAddMessageCommand => new AsyncCommand(null!);
 	public AsyncCommand OnRunCommand => new AsyncCommand(null!);
 	public AsyncCommand OnLoadPreviousMessagesCommand = new AsyncCommand(null!);
+	public AsyncCommand OnSummarizeThreadMessagesCommand = new AsyncCommand(null!);
 	#endregion
 }
 
@@ -62,6 +71,7 @@ public class AssistantChatUCViewModel : BaseViewModel
 	#region "Member Variables"
 	readonly IOpenAIService _openAIService = null!;
 	readonly IUserService _userService = null!;
+	readonly ISystemData _systemData = null!;
 	#endregion
 
 	#region "Constructors"
@@ -69,19 +79,18 @@ public class AssistantChatUCViewModel : BaseViewModel
 	public AssistantChatUCViewModel(
 		IServiceProvider serviceProvider,
 		IOpenAIService openAIService,
-		IUserService userService) : base(serviceProvider) 
+		IUserService userService,
+		ISystemData systemData) : base(serviceProvider) 
 	{
 		_openAIService = openAIService;
 		_userService = userService;
+		_systemData = systemData;
 	}
-	#endregion
+    #endregion
 
-	#region "Private Properties"
-	private Dictionary<string, ObservableCollection<ChatLogMessage>> ThreadChatHistory = new Dictionary<string, ObservableCollection<ChatLogMessage>>();
-	#endregion
-
-	#region "Form Properties"
-	public Assistant? Assistant
+    #region "Form Properties"
+    public Dictionary<string, ThreadHistory> ThreadChatHistory = new Dictionary<string, ThreadHistory>();
+    public Assistant? Assistant
 	{
 		get => field;
 		set => OnPropertyChanged(ref field, value);
@@ -99,22 +108,37 @@ public class AssistantChatUCViewModel : BaseViewModel
 			//--Save current thread chat history.
 			if (field != null)
 			{
-				this.ThreadChatHistory[field.ThreadId] = this.ChatLogControl!.ChatLogMessages;
+				if (this.ThreadChatHistory.ContainsKey(field.ThreadId) == false)
+				{
+					this.ThreadChatHistory[field.ThreadId] = new ThreadHistory();
+				}
+
+				this.ThreadChatHistory[field.ThreadId].Messages = this.ChatLogControl!.ChatLogMessages;
 			}
 
             OnPropertyChanged(ref field, value);
+			OnPropertyChanged(nameof(this.SelectedThreadHistory));
 			this.ChatLogControl = base.Services!.GetRequiredService<ChatLogUCViewModel>();
 
 			//--Load existing chat
-			if (value != null && this.ThreadChatHistory.TryGetValue(value.ThreadId, out ObservableCollection<ChatLogMessage>? cachedMessages))
+			if (value != null && this.ThreadChatHistory.TryGetValue(value.ThreadId, out ThreadHistory? cachedHistory))
 			{
-				this.ChatLogControl!.ChatLogMessages = cachedMessages;
+				this.ChatLogControl!.ChatLogMessages = cachedHistory.Messages;
 			}
 			else
 			{
 				this.ChatLogControl!.ChatLogMessages = new ObservableCollection<ChatLogMessage>();
 			}
         }
+	}
+	public ThreadHistory? SelectedThreadHistory
+	{
+		get
+		{
+			if (this.SelectedThread == null) { return null; }
+			ThreadChatHistory.TryGetValue(SelectedThread.ThreadId, out var hist);
+			return hist;
+		}
 	}
 	public string UserInput
 	{
@@ -126,6 +150,12 @@ public class AssistantChatUCViewModel : BaseViewModel
 		get => field;
 		set => OnPropertyChanged(ref field, value);
 	} = null;
+	public double TokensRatio => (this.SelectedThreadHistory?.TokenCount ?? 0) / (double)(_systemData.MaxTPM == 0 ? 1 : _systemData.MaxTPM);
+	public Brush TokenUsageBrush =>
+		this.TokensRatio >= 0.8 ? (Brush)App.Current.Resources["ErrorBrush"] :
+		this.TokensRatio >= 0.6 ? (Brush)App.Current.Resources["WarningBrush"] :
+		(Brush)App.Current.Resources["MainFontForegroundBrush"];
+	public int MaxTPM => _systemData.MaxTPM;
 	#endregion
 
 	#region "Commands"
@@ -134,6 +164,7 @@ public class AssistantChatUCViewModel : BaseViewModel
 	public AsyncCommand OnAddMessageCommand => new AsyncCommand(OnAddMessageCommandAsync, () => this.SelectedThread != null);
 	public AsyncCommand OnRunCommand => new AsyncCommand(OnRunCommand2Async, () => this.SelectedThread != null);
 	public AsyncCommand OnLoadPreviousMessagesCommand => new AsyncCommand(OnLoadPreviousMessagesCommandAsync);
+	public AsyncCommand OnSummarizeThreadMessagesCommand => new AsyncCommand(OnSummarizeThreadMessagesCommandAsync);
     #endregion
 
     #region "Public Methods"
@@ -146,6 +177,16 @@ public class AssistantChatUCViewModel : BaseViewModel
 			{
 				this.Threads = new ObservableCollection<UserAssistantThread>(
 					await _userService.GetAssistantThreadsAsync(this.Assistant.Id));
+
+				//--Initialize a chat history for each thread.
+				foreach (UserAssistantThread thread in this.Threads)
+				{
+					//--Sanity condition check.
+					if (this.ThreadChatHistory.ContainsKey(thread.ThreadId) == false)
+					{
+						this.ThreadChatHistory[thread.ThreadId] = new ThreadHistory();
+					}
+				}
 			}
 		}
 		catch (Exception ex) { await base.OnErrorAsync(ex, "Failed to load assistant threads."); }
@@ -154,6 +195,15 @@ public class AssistantChatUCViewModel : BaseViewModel
     #endregion
 
     #region "Private Methods"
+	private void UpdateThreadTokenCount(int count)
+	{
+        if (this.ThreadChatHistory.TryGetValue(this.SelectedThread!.ThreadId, out var threadHistory))
+        {
+            threadHistory.TokenCount = count;
+            OnPropertyChanged(nameof(TokensRatio));
+            OnPropertyChanged(nameof(TokenUsageBrush));
+        }
+    }
     private async Task OnNewThreadCommandAsync()
 	{
 		base.IsBusy = true;
@@ -274,7 +324,7 @@ public class AssistantChatUCViewModel : BaseViewModel
 			};
 			this.ChatLogControl!.ChatLogMessages.Add(assistantMessage);
 
-			await _openAIService.RunThreadStreamingAsync(
+			int tokenCount = await _openAIService.RunThreadStreamingAsync(
 				this.SelectedThread!.ThreadId,
 				this.Assistant!.Id,
 				this.SelectedThread!.LastMessageId,
@@ -282,6 +332,9 @@ public class AssistantChatUCViewModel : BaseViewModel
 			await _userService.UpdateLastMessageIdAsync(
 				this.SelectedThread!.Id,
 				this.SelectedThread!.LastMessageId!);
+
+			//--Update token count
+			UpdateThreadTokenCount(tokenCount);
 		}
 		catch (Exception ex)
 		{
@@ -293,6 +346,7 @@ public class AssistantChatUCViewModel : BaseViewModel
 		try
 		{
 			base.IsBusy = true;
+			StringBuilder sb = new StringBuilder();
 			List<ChatLogMessage> previousMessages = await _openAIService.GetPreviousMessagesAsync(this.SelectedThread!.ThreadId);
 
 			//--Fix owners
@@ -300,7 +354,14 @@ public class AssistantChatUCViewModel : BaseViewModel
 			{
 				if (msg.Owner == "User") { msg.Owner = base.CurrentUser!.FirstName; }
 				else { msg.Owner = this.Assistant!.Name; }
+
+				//--Append content to 'sb' so we can count tokens.
+				sb.Append(msg.Content);
 			}
+
+            TiktokenTokenizer tokenizer = TiktokenTokenizer.CreateForModel("gpt-4o");
+			int tokenCount = tokenizer.CountTokens(sb.ToString());
+			UpdateThreadTokenCount(tokenCount);
 
 			this.ChatLogControl!.ChatLogMessages = new ObservableCollection<ChatLogMessage>(previousMessages);
 		}
@@ -310,17 +371,30 @@ public class AssistantChatUCViewModel : BaseViewModel
 		}
 		finally { base.IsBusy = false; }
 	}
+	private async Task OnSummarizeThreadMessagesCommandAsync()
+	{
+		try
+		{
+            bool result = await base.DialogService!.ShowPromptDialogAsync("Are you sure you want to summarize this thread? The AI will summarize the best it can.");
+			if (result)
+			{
+				this.IsBusy = true;
+                ChatSummarizationResult summaryResult = await _openAIService.SummarizeThreadMessagesAsync(
+					this.SelectedThread!.ThreadId,
+					this.Assistant!.Id);
+
+				this.SelectedThread!.LastMessageId = summaryResult.LastMessageId;
+				UpdateThreadTokenCount(summaryResult.NewTokenCount);
+
+				this.ChatLogControl!.ChatLogMessages.Clear();
+				await OnLoadPreviousMessagesCommandAsync();
+			}
+		}
+		catch (Exception ex)
+		{
+			await base.OnErrorAsync(ex);
+		}
+		finally { base.IsBusy = false; }
+	}
     #endregion
-
-    //public async Task AddStreamingMessageAsync(string owner, IAsyncEnumerable<string> contentStream)
-    //{
-    //    var message = new ChatLogMessage { Owner = owner };
-    //    ChatLogMessages.Add(message);
-
-    //    await foreach (var contentPart in contentStream)
-    //    {
-    //        message.Content += contentPart;
-    //        // Trigger visual update here if necessary
-    //    }
-    //}
 }

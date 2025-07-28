@@ -1,4 +1,5 @@
-﻿using CefSharp.Wpf;
+﻿using CefSharp;
+using CefSharp.Wpf;
 using MartinezAI.Data;
 using MartinezAI.WPFApp.Forms.Dialogs;
 using MartinezAI.WPFApp.Forms.UserControls;
@@ -39,6 +40,11 @@ public partial class App : Application
 
         CefSettings settings = new CefSettings();
         settings.LogSeverity = CefSharp.LogSeverity.Info;
+        settings.CachePath = System.IO.Path.Combine(
+            System.IO.Path.GetTempPath(),
+            "CefSharpApp_",
+            Environment.ProcessId.ToString());
+        Cef.Initialize(settings);
     }
 }
 

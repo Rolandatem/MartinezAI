@@ -2,6 +2,7 @@
 using MartinezAI.WPFApp.Models;
 using OpenAI.Assistants;
 using System.ClientModel;
+using System.Text;
 using System.Windows;
 using System.Windows.Controls.Primitives;
 
@@ -216,6 +217,7 @@ internal class OpenAIService : IOpenAIService
         ChatLogMessage assistantMessage)
     {
         AssistantClient client = new AssistantClient(Properties.Settings.Default.OpenAIKey);
+        StringBuilder sb = new StringBuilder();
 
         await foreach (StreamingUpdate? update in client.CreateRunStreamingAsync(threadId, assistantId))
         {
@@ -223,6 +225,17 @@ internal class OpenAIService : IOpenAIService
             {
                 case StreamingUpdateReason.Error:
                     throw new Exception($"Error during run: {update}");
+
+                case StreamingUpdateReason.RunFailed:
+                    if (update is RunUpdate runFailedUpdate)
+                    {
+                        throw new Exception($"Error during run: {runFailedUpdate.Value.LastError?.Message}");
+                    }
+                    break;
+
+                case StreamingUpdateReason.RunRequiresAction:
+                    //--TODO
+                    break;
 
                 case StreamingUpdateReason.MessageCreated:
                     //--New message started, get ID for tracking
@@ -238,36 +251,19 @@ internal class OpenAIService : IOpenAIService
                         //--Make sure to run on UI thread.
                         Application.Current.Dispatcher.Invoke(() =>
                         {
+                            //sb.Append(contentUpdate.Text);
                             assistantMessage.Content += contentUpdate.Text;
                         });
                     }
                     break;
+
+                case StreamingUpdateReason.RunCompleted:
+                    if (update is RunUpdate runCompletedUpdate)
+                    {
+                        int totalTokensUsed = runCompletedUpdate.Value.Usage.TotalTokenCount;
+                    }
+                    break;
                 default: break;
-            }
-
-
-            if (update.UpdateKind == StreamingUpdateReason.Error)
-            {
-                throw new Exception($"Error during run: {update}");
-            }
-            else if (update.UpdateKind == StreamingUpdateReason.RunFailed)
-            {
-                if (update is RunUpdate runUpdate)
-                {
-                    throw new Exception($"Error during run: {runUpdate.Value.LastError?.Message}");
-                }
-            }
-            else if (update.UpdateKind == StreamingUpdateReason.RunRequiresAction)
-            {
-                //--include tool somehow.
-            }
-            else if (update.UpdateKind == StreamingUpdateReason.MessageUpdated)
-            {
-                if (update is MessageContentUpdate contentUpdate)
-                {
-                    //--Do something with contentUpdate.Text
-                }
-                else { throw new Exception("different content"); }
             }
         }
     }

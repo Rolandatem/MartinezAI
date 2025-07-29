@@ -345,7 +345,12 @@ internal class OpenAIService : IOpenAIService
 
             //--Create summary request.
             StringBuilder sb = new StringBuilder();
-            sb.AppendLine(@"Please summarize the content of this chat for consolidation. 
+            sb.AppendLine(@"Please summarize the content of this chat for consolidation. If you do not
+                see a message that starts with ""CONTEXT SUMMARY"": your summary should start with that.
+                If you do see one then a previous summary was created. Use that as a base for your new
+                summary. Do not resummarize this message but extend upon it with any new information you
+                think we should keep. Do not change any line items unless you notice conflicting data in
+                which case update as necessary. While reviewing the contents below to summarize 
                 5 dashes (-----) marks the beginning of a new message. The next line will be
                 either 'User' for user message, or 'Assistant' for assistant message. The rest of
                 the content will be the message.");

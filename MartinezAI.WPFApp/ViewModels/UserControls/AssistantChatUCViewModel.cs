@@ -219,6 +219,7 @@ public class AssistantChatUCViewModel : BaseViewModel
 					newThread.Id);
 
 				this.Threads.Add(newLocalThread);
+				this.ThreadChatHistory[newLocalThread.ThreadId] = new ThreadHistory();
 			}
 
 		}

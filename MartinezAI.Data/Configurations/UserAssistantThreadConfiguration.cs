@@ -11,7 +11,7 @@ internal class UserAssistantThreadConfiguration : IEntityTypeConfiguration<UserA
         builder.ToTable("UserAssistantThread");
 
         builder.HasKey(k => k.Id);
-        builder.HasIndex(i => i.ThreadName).IsUnique();
+        builder.HasIndex(i => new { i.ThreadName, i.AssistantId}).IsUnique();
 
         builder.Property(p => p.ThreadName)
             .HasMaxLength(100)

@@ -307,7 +307,7 @@ internal class OpenAIService : IOpenAIService
         }
     }
 
-    public async Task<ChatSummarizationResult> SummarizeThreadMessagesAsync(
+    public async Task<int> SummarizeThreadMessagesAsync(
         string threadId,
         string assistantId,
         int retainLimit = 10)
@@ -316,25 +316,26 @@ internal class OpenAIService : IOpenAIService
         {
             AssistantClient client = new AssistantClient(Properties.Settings.Default.OpenAIKey);
 
-            //--Get previous messages
+            #region "Prepare Previous Messages For Summarization"
+            //--Get Previous messages
             MessageCollectionOptions options = new MessageCollectionOptions()
             {
                 Order = MessageCollectionOrder.Ascending
             };
             List<ChatLogMessage> messageList = new List<ChatLogMessage>();
-            await foreach (ThreadMessage threadMessage in client.GetMessagesAsync(
-                threadId,
-                options))
+            await foreach (ThreadMessage threadMessage in client.GetMessagesAsync(threadId, options))
             {
                 messageList.Add(new ChatLogMessage()
                 {
+                    //--Hijack the owner property and append the thread id so we don't have to
+                    //--create a new property just for this situation. This is a temporary list anyway.
                     Owner = threadMessage.Role.ToString() + "|" + threadMessage.Id,
                     Content = threadMessage.Content.FirstOrDefault()?.Text ?? String.Empty
                 });
             }
 
-            //--Split messages to where the first contains everything except the last 10
-            //--messages and the second should have the remaining.
+            //--Split messages into two lists. One containing the contents to summarize, the other with
+            //--the last {retainLimit} messages to retain so not all context is gone.
             int splitIdx = Math.Max(0, messageList.Count - retainLimit);
             if (splitIdx == 0)
             {
@@ -343,42 +344,45 @@ internal class OpenAIService : IOpenAIService
             List<ChatLogMessage> consolidationList = messageList.Take(splitIdx).ToList();
             List<ChatLogMessage> retentionList = messageList.Skip(splitIdx).ToList();
 
-            //--Create summary request.
+            //--Build content to summarize from the consolidation list.
             StringBuilder sb = new StringBuilder();
-            sb.AppendLine(@"Please summarize the content of this chat for consolidation. If you do not
-                see a message that starts with ""CONTEXT SUMMARY"": your new summary should start with that.
-                If you do see one then a previous summary was created. Use the existing summary as a base for your new
-                summary. Do not resummarize this message but extend upon it with any new information you
-                think we should keep. Do not change any line items unless you notice conflicting data in
-                which case update as necessary. Mark each summarized line item with a date and time. Only remove 
-                line items that seem to no longer matter in context after a day unless I specifically state that it is
-                an important note that should never be deleted. While reviewing the contents below to summarize 
-                5 dashes (-----) marks the beginning of a new message. The next line will be
-                either 'User' for user message, or 'Assistant' for assistant message. The rest of
-                the content will be the message.");
-
             foreach (ChatLogMessage message in consolidationList)
             {
                 sb.AppendLine("-----");
-                sb.AppendLine(message.Owner.Split("|")[0]);
+                sb.AppendLine(message.Owner.Split('|')[0]);
                 sb.AppendLine(message.Content);
             }
+            #endregion
 
-            //--Create new thread to make sure there is enough space to use.
-            ClientResult<AssistantThread> newThread = await client.CreateThreadAsync();
+            #region "Find Summarizer Assistant"
+            string summarizerAssistantId = String.Empty;
+            await foreach (Assistant assistant in client.GetAssistantsAsync())
+            {
+                if (assistant.Metadata.ContainsKey("function") &&
+                    assistant.Metadata["function"] == "summarizer")
+                {
+                    summarizerAssistantId = assistant.Id;
+                    break;
+                }
+            }
+            #endregion
 
-            //--Send message with content to summarize using the same assistant for context.
+            #region "Create new clean thread and process summarization"
+            //--Create thread
+            ClientResult<AssistantThread> summaryThread = await client.CreateThreadAsync();
+
+            //--Send message containing content to summarize.
             ClientResult<ThreadMessage> summaryThreadMessage = await client.CreateMessageAsync(
-                newThread.Value.Id,
+                summaryThread.Value.Id,
                 MessageRole.User,
                 [MessageContent.FromText(sb.ToString())]);
 
-            //--Create a use a 'Run' for the summarizing to happen.
+            //--Create a run request to process the summarization.
             sb = new StringBuilder();
             int newTokenCount = 0;
             await foreach (StreamingUpdate? update in client.CreateRunStreamingAsync(
-                newThread.Value.Id,
-                assistantId))
+                summaryThread.Value.Id,
+                summarizerAssistantId))
             {
                 switch (update.UpdateKind)
                 {
@@ -405,50 +409,51 @@ internal class OpenAIService : IOpenAIService
                             sb.Append(contentUpdate.Text);
                         }
                         break;
-
-                    default: break;
                 }
             }
+            #endregion
 
-            //--Now that we have the consolidation, we need to delete the existing messages from
-            //--the thread.
+            #region "Consolidation complete, now need to clean up original thread"
+            //--Delete existing messages in original thread to clean out TPM.
             List<Task> deleteTasks = new List<Task>();
             foreach (ChatLogMessage toDelete in messageList)
             {
-                //ClientResult<MessageDeletionResult> result = await client.DeleteMessageAsync(
-                //    threadId,
-                //    toDelete.Owner.Split("|")[1]);
                 deleteTasks.Add(client.DeleteMessageAsync(
                     threadId,
-                    toDelete.Owner.Split("|")[1]));
+                    toDelete.Owner.Split('|')[1]));
             }
             await Task.WhenAll(deleteTasks);
+            #endregion
 
-            //--Now for context let's add the consolidated message to the thread.
+            #region "Clean Thread, add messages back."
+            //--First we need to add the summarized message so it's the first part of the
+            //--message context.
             ClientResult<ThreadMessage> addConsolidatedMessage = await client.CreateMessageAsync(
                 threadId,
                 MessageRole.Assistant,
                 [MessageContent.FromText(sb.ToString())]);
 
-            //--Now loop and enter in retained messages
-            string lastMessageId = String.Empty;
+            //--Now we can loop through the retained message and add those back into the thread.
             foreach (ChatLogMessage retainedMessage in retentionList)
             {
                 ClientResult<ThreadMessage> result = await client.CreateMessageAsync(
                     threadId,
-                    (MessageRole)Enum.Parse(typeof(MessageRole), retainedMessage.Owner.Split("|")[0]),
+                    (MessageRole)Enum.Parse(typeof(MessageRole), retainedMessage.Owner.Split('|')[0]),
                     [MessageContent.FromText(retainedMessage.Content)]);
-                lastMessageId = retainedMessage.Owner.Split("|")[1];
             }
+            #endregion
 
-            //--Now delete temp thread for cleanup.
-            await client.DeleteThreadAsync(newThread.Value.Id);
+            #region "Cleanup"
+            //--Now we can go ahead and delete the temp summarization thread.
+            await client.DeleteThreadAsync(summaryThread.Value.Id);
+            #endregion
 
-            return new ChatSummarizationResult { LastMessageId = lastMessageId, NewTokenCount = newTokenCount };
+            //--Return new token count.
+            return newTokenCount;
         }
         catch (Exception ex)
         {
-            throw new Exception("Failed to summarize messages.", ex);
+            throw new Exception("Failed to summarize thread.", ex);
         }
     }
 }

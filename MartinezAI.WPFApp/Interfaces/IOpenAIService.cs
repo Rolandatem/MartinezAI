@@ -29,7 +29,7 @@ public interface IOpenAIService
         ChatLogMessage assistantMessage);
     Task<List<ChatLogMessage>> GetPreviousMessagesAsync(
         string threadId);
-    Task<ChatSummarizationResult> SummarizeThreadMessagesAsync(
+    Task<int> SummarizeThreadMessagesAsync(
         string threadId,
         string assistantId,
         int retainLimit = 10);

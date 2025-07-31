@@ -380,12 +380,17 @@ public class AssistantChatUCViewModel : BaseViewModel
 			if (result)
 			{
 				this.IsBusy = true;
-                ChatSummarizationResult summaryResult = await _openAIService.SummarizeThreadMessagesAsync(
+
+				//            ChatSummarizationResult summaryResult = await _openAIService.SummarizeThreadMessagesAsync(
+				//	this.SelectedThread!.ThreadId,
+				//	this.Assistant!.Id);
+
+				//this.SelectedThread!.LastMessageId = summaryResult.LastMessageId;
+				//UpdateThreadTokenCount(summaryResult.NewTokenCount);
+
+				int newTokenCount = await _openAIService.SummarizeThreadMessagesAsync2(
 					this.SelectedThread!.ThreadId,
 					this.Assistant!.Id);
-
-				this.SelectedThread!.LastMessageId = summaryResult.LastMessageId;
-				UpdateThreadTokenCount(summaryResult.NewTokenCount);
 
 				this.ChatLogControl!.ChatLogMessages.Clear();
 				await OnLoadPreviousMessagesCommandAsync();

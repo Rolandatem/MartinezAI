@@ -10,6 +10,7 @@
         WindowStyle="None"
         SizeToContent="WidthAndHeight"
         Width="350"
+        ResizeMode="NoResize"
         Background="{DynamicResource AppBackgroundBrush}"
         d:DataContext="{d:DesignInstance vm:NewThreadDialogViewModel, IsDesignTimeCreatable=True}">
 

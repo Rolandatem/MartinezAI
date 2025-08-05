@@ -7,7 +7,6 @@ using Microsoft.ML.Tokenizers;
 using OpenAI.Assistants;
 using System.Collections.ObjectModel;
 using System.Text;
-using System.Transactions;
 using System.Windows.Media;
 
 namespace MartinezAI.WPFApp.ViewModels.UserControls;
@@ -235,6 +234,7 @@ public class AssistantChatUCViewModel : BaseViewModel
 
 				this.Threads.Add(newLocalThread);
 				this.ThreadChatHistory[newLocalThread.ThreadId] = new ThreadHistory();
+				this.SelectedThread = newLocalThread;
 			}
 
 		}

@@ -8,10 +8,10 @@
         xmlns:converters="clr-namespace:MartinezAI.WPFApp.Converters"
         mc:Ignorable="d"
         d:DataContext="{d:DesignInstance vm:CreateUserDialogViewModel, IsDesignTimeCreatable=True}"
-        Title="CreateUserDialog"
         SizeToContent="WidthAndHeight"
         WindowStartupLocation="CenterOwner"
         WindowStyle="None"
+        ResizeMode="NoResize"
         Background="{DynamicResource AppBackgroundBrush}">
 
     <Window.Resources>

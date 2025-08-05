@@ -51,6 +51,7 @@
                                         CornerRadius="8"
                                         Padding="5">
                                     <cef:ChromiumWebBrowser ap:CefAttachedProperties.Html="{Binding Content}"
+                                                            ap:CefAttachedProperties.IsContentComplete="{Binding IsContentComplete}"
                                                             HorizontalAlignment="Stretch"
                                                             Loaded="ChromiumWebBrowser_Loaded"
                                                             LoadingStateChanged="ChromiumWebBrowser_LoadingStateChanged" />

@@ -14,4 +14,9 @@ public class ChatLogMessage : NotifyableClass
         get => field;
         set => OnPropertyChanged(ref field, value);
     }
+    public bool? IsContentComplete
+    {
+        get => field;
+        set => OnPropertyChanged(ref field, value);
+    } = null;
 }

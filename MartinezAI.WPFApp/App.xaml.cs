@@ -72,7 +72,7 @@ public static class ServiceCollectionExtensions
             .AddTransient<IDialogService, DialogService>()
             .AddTransient<IOpenAIService, OpenAIService>()
             .AddTransient<IUserService, UserService>()
-            .AddSingleton<IMarkupToHtmlConverter, MarkupToHtmlConverter>();
+            .AddSingleton<IMarkdownToHtmlConverter, MarkdownToHtmlConverter>();
 
         //--Forms & ViewModels
         services

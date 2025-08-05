@@ -8,13 +8,13 @@ public static class ServiceHelper
 {
     public static IServiceProvider Services { get; set; } = null!;
 
-    public static IMarkupToHtmlConverter? MarkdownToHtmlConverter
+    public static IMarkdownToHtmlConverter? MarkdownToHtmlConverter
     {
         get
         {
             field ??= BaseViewModel.IsInDesignMode
-                    ? new MarkupToHtmlConverter()
-                    : ServiceHelper.Services.GetRequiredService<IMarkupToHtmlConverter>();
+                    ? new MarkdownToHtmlConverter()
+                    : ServiceHelper.Services.GetRequiredService<IMarkdownToHtmlConverter>();
 
             return field;
         }

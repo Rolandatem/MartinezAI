@@ -6,7 +6,7 @@ using System.Windows.Media;
 
 namespace MartinezAI.WPFApp.Tools;
 
-internal class MarkupToHtmlConverter : IMarkupToHtmlConverter
+internal class MarkdownToHtmlConverter : IMarkdownToHtmlConverter
 {
     #region "Private Methods"
     private string BrushToHexString(SolidColorBrush brush)

@@ -27,6 +27,16 @@ public static class CefAttachedProperties
 
 	public static bool GetIsContentLoaded(DependencyObject obj) => (bool)obj.GetValue(IsContentLoadedProperty);
 	public static void SetIsContentLoaded(DependencyObject obj, bool value) => obj.SetValue(IsContentLoadedProperty, value);
+
+	public static readonly DependencyProperty IsContentCompleteProperty =
+		DependencyProperty.RegisterAttached(
+			"IsContentComplete",
+			typeof(bool?),
+			typeof(CefAttachedProperties),
+			new FrameworkPropertyMetadata(null, OnContentCompleteChangedAsync));
+
+	public static bool? GetIsContentComplete(DependencyObject obj) => (bool?)obj.GetValue(IsContentCompleteProperty);
+	public static void SetIsContentComplete(DependencyObject obj, bool? value) => obj.SetValue(IsContentCompleteProperty, value);
 	#endregion
 
 	#region "Events"
@@ -60,6 +70,33 @@ public static class CefAttachedProperties
 				}
 			});
         }
+	}
+	private static async void OnContentCompleteChangedAsync(DependencyObject d,  DependencyPropertyChangedEventArgs e)
+	{
+		if (d is ChromiumWebBrowser webBrowser)
+		{
+			bool? isContentComplete = (bool?)e.NewValue;
+
+			if (isContentComplete == false)
+			{
+				webBrowser.Height = 500;
+			}
+			else if (isContentComplete == true)
+			{
+				while (webBrowser.CanExecuteJavascriptInMainFrame == false)
+				{
+					await Task.Delay(25);
+				}
+
+				JavascriptResponse response = await webBrowser.EvaluateScriptAsync("document.documentElement.scrollHeight");
+				int docHeight = (int)response.Result;
+
+				webBrowser.Dispatcher.Invoke(() =>
+				{
+					webBrowser.Height = docHeight + 10; 
+				});
+			}
+		}
 	}
 	#endregion
 }

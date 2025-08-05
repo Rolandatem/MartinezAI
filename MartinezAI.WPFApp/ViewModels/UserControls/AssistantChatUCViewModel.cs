@@ -316,7 +316,8 @@ public class AssistantChatUCViewModel : BaseViewModel
 			ChatLogMessage assistantMessage = new ChatLogMessage()
 			{
 				Owner = this.Assistant!.Name,
-				Content = String.Empty
+				Content = String.Empty,
+				IsContentComplete = false
 			};
 			this.ChatLogControl!.ChatLogMessages.Add(assistantMessage);
 
@@ -327,6 +328,8 @@ public class AssistantChatUCViewModel : BaseViewModel
 
 			//--Update token count
 			UpdateThreadTokenCount(tokenCount);
+
+			assistantMessage.IsContentComplete = true;
 		}
 		catch (Exception ex)
 		{

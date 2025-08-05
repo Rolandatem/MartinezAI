@@ -185,7 +185,8 @@
                     BorderBrush="{DynamicResource ContainerBorderBrush}"
                     BorderThickness="1"
                     CornerRadius="8">
-                <TextBox Text="{Binding UserInput, UpdateSourceTrigger=PropertyChanged}"
+                <TextBox Text="{Binding UserInput}"
+                         IsEnabled="{Binding UserInputIsEnabled}"
                          Background="Transparent"
                          AcceptsReturn="True"
                          AcceptsTab="True"
@@ -226,14 +227,16 @@
                 <StackPanel Grid.Column="0"
                             Orientation="Horizontal">
                     <Button ToolTip="Attach File"
-                            Style="{StaticResource IconButtonStyle}">
+                            Style="{StaticResource IconButtonStyle}"
+                            IsEnabled="{Binding UserInputIsEnabled}">
                         <fa:ImageAwesome Icon="Paperclip" 
                                          Height="15"
                                          Style="{DynamicResource FontAwesomeChatIcons}"/>
                     </Button>
 
                     <Button ToolTip="Upload Image"
-                            Style="{StaticResource IconButtonStyle}">
+                            Style="{StaticResource IconButtonStyle}"
+                            IsEnabled="{Binding UserInputIsEnabled}">
                         <fa:ImageAwesome Icon="Image" 
                                          Height="15"
                                          Margin="10,0,0,0"
@@ -248,11 +251,13 @@
                     <Button Content="Add Message"
                             Padding="10,3"
                             Style="{DynamicResource RoundedButtonStyle}" 
+                            IsEnabled="{Binding UserInputIsEnabled}"
                             Command="{Binding OnAddMessageCommand, Mode=OneWay}" />
 
                     <Button Margin="10,0,0,0"
                             Padding="10,3"
                             Style="{DynamicResource RoundedButtonStyle}"
+                            IsEnabled="{Binding UserInputIsEnabled}"
                             Command="{Binding OnRunCommand, Mode=OneWay}">
                         <TextBlock>
                             <Run Text="Run" />

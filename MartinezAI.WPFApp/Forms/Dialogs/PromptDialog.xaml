@@ -8,9 +8,9 @@
         mc:Ignorable="d"
         MaxWidth="600"
         SizeToContent="WidthAndHeight"
-        Title="PromptDialog"
         WindowStartupLocation="CenterOwner"
         WindowStyle="None"
+        ResizeMode="NoResize"
         Background="{DynamicResource AppBackgroundBrush}"
         d:DataContext="{d:DesignInstance vm:PromptDialogViewModel, IsDesignTimeCreatable=True}">
 

@@ -49,6 +49,7 @@ public class AssistantChatUCViewModelDesign : BaseViewModel
 	public double TokensRatio => 0.6F;
 	public Brush TokenUsageBrush => (Brush)App.Current.Resources["MainFontForegroundBrush"];
 	public int MaxTPM => 30000;
+	public bool UserInputIsEnabled => false;
 	#endregion
 
 	#region "Constructor"
@@ -157,13 +158,26 @@ public class AssistantChatUCViewModel : BaseViewModel
 		this.TokensRatio >= 0.6 ? (Brush)App.Current.Resources["WarningBrush"] :
 		(Brush)App.Current.Resources["MainFontForegroundBrush"];
 	public int MaxTPM => _systemData.MaxTPM;
+	public bool UserInputIsEnabled
+	{
+		get => field;
+		set
+		{
+            OnPropertyChanged(ref field, value);
+			
+			if (value)
+			{
+                this.UserInput = String.Empty;
+            }
+        }
+	} = true;
 	#endregion
 
 	#region "Commands"
 	public AsyncCommand OnNewThreadCommand => new AsyncCommand(OnNewThreadCommandAsync);
 	public AsyncCommand OnDeleteThreadCommand => new AsyncCommand(OnDeleteThreadCommandAsync);
-	public AsyncCommand OnAddMessageCommand => new AsyncCommand(OnAddMessageCommandAsync, () => this.SelectedThread != null);
-	public AsyncCommand OnRunCommand => new AsyncCommand(OnRunCommandAsync, () => this.SelectedThread != null);
+	public AsyncCommand OnAddMessageCommand => new AsyncCommand(OnAddMessageCommandAsync);//, () => this.UserInputIsEnabled);
+	public AsyncCommand OnRunCommand => new AsyncCommand(OnRunCommandAsync);//, () => this.UserInputIsEnabled);
 	public AsyncCommand OnLoadPreviousMessagesCommand => new AsyncCommand(OnLoadPreviousMessagesCommandAsync);
 	public AsyncCommand OnSummarizeThreadMessagesCommand => new AsyncCommand(OnSummarizeThreadMessagesCommandAsync);
     #endregion
@@ -263,6 +277,7 @@ public class AssistantChatUCViewModel : BaseViewModel
 	{
 		if (this.UserInput.Exists())
 		{
+			this.UserInputIsEnabled = false;
 			ChatLogMessage userMessage = new ChatLogMessage()
 			{
 				Owner = base.CurrentUser!.FirstName,
@@ -275,8 +290,8 @@ public class AssistantChatUCViewModel : BaseViewModel
 				this.SelectedThread!.ThreadId,
 				this.UserInput);
 
-            this.UserInput = String.Empty;
 			userMessage.IsContentComplete = true;
+			this.UserInputIsEnabled = true;
         }
 	}
 	private async Task OnRunCommandAsync()
@@ -288,6 +303,7 @@ public class AssistantChatUCViewModel : BaseViewModel
 				await OnAddMessageCommandAsync();
 			}
 
+			this.UserInputIsEnabled = false;
 			ChatLogMessage assistantMessage = new ChatLogMessage()
 			{
 				Owner = this.Assistant!.Name,
@@ -309,13 +325,16 @@ public class AssistantChatUCViewModel : BaseViewModel
 		catch (Exception ex)
 		{
 			await base.OnErrorAsync(ex);
-		}
+		} 
+		finally
+		{ this.UserInputIsEnabled = true; }
 	}
 	private async Task OnLoadPreviousMessagesCommandAsync()
 	{
 		try
 		{
 			base.IsBusy = true;
+			this.UserInputIsEnabled = false;
 			StringBuilder sb = new StringBuilder();
 			List<ChatLogMessage> previousMessages = await _openAIService.GetPreviousMessagesAsync(this.SelectedThread!.ThreadId);
 
@@ -349,30 +368,39 @@ public class AssistantChatUCViewModel : BaseViewModel
 		{
 			await base.OnErrorAsync(ex);
 		}
-		finally { base.IsBusy = false; }
+		finally
+		{
+			base.IsBusy = false;
+			this.UserInputIsEnabled = true;
+		}
 	}
 	private async Task OnSummarizeThreadMessagesCommandAsync()
 	{
-		try
-		{
-            bool result = await base.DialogService!.ShowPromptDialogAsync("Are you sure you want to summarize this thread? The AI will summarize the best it can.");
-			if (result)
+        bool result = await base.DialogService!.ShowPromptDialogAsync("Are you sure you want to summarize this thread? The AI will summarize the best it can.");
+        if (result)
+        {
+            try
+            {
+                this.IsBusy = true;
+				this.UserInputIsEnabled = false;
+
+                int newTokenCount = await _openAIService.SummarizeThreadMessagesAsync(
+                    this.SelectedThread!.ThreadId,
+                    this.Assistant!.Id);
+
+                this.ChatLogControl!.ChatLogMessages.Clear();
+                await OnLoadPreviousMessagesCommandAsync();
+            }
+            catch (Exception ex)
+            {
+                await base.OnErrorAsync(ex);
+            }
+            finally 
 			{
-				this.IsBusy = true;
-
-				int newTokenCount = await _openAIService.SummarizeThreadMessagesAsync(
-					this.SelectedThread!.ThreadId,
-					this.Assistant!.Id);
-
-				this.ChatLogControl!.ChatLogMessages.Clear();
-				await OnLoadPreviousMessagesCommandAsync();
+				base.IsBusy = false;
+				this.UserInputIsEnabled = true;
 			}
-		}
-		catch (Exception ex)
-		{
-			await base.OnErrorAsync(ex);
-		}
-		finally { base.IsBusy = false; }
+        }
 	}
     #endregion
 }

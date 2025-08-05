@@ -52,10 +52,10 @@ public static class CefAttachedProperties
 						string script = $@"
 							var contentDiv = document.getElementById('content-div');
 							if (contentDiv) {{
-								contentDiv.innerHTML = '{bodyHtml.Replace("'", "\\'").Replace(Environment.NewLine, "")}';
+								contentDiv.innerHTML = `{bodyHtml}`;
 							}}";
 
-						await webBrowser.EvaluateScriptAsync(script);
+						JavascriptResponse result = await webBrowser.EvaluateScriptAsync(script);
 					}
 				}
 			});

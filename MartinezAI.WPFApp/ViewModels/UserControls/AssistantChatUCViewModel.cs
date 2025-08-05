@@ -275,41 +275,36 @@ public class AssistantChatUCViewModel : BaseViewModel
             this.UserInput = String.Empty;
         }
 	}
+	//private async Task OnRunCommandAsync()
+	//{
+	//	try
+	//	{
+	//		base.IsBusy = true;
+	//		if (this.UserInput.Exists())
+	//		{
+	//			await OnAddMessageCommandAsync();
+	//		}
+
+	//		List<string> assistantMessages = await _openAIService.RunThreadAsync(
+	//			this.SelectedThread!.ThreadId,
+	//			this.Assistant!.Id);
+
+	//		foreach (string message in assistantMessages)
+	//		{
+	//			this.ChatLogControl!.ChatLogMessages.Add(new ChatLogMessage()
+	//			{
+	//				Owner = this.Assistant.Name,
+	//				Content = message
+	//			});
+	//		}
+	//	}
+	//	catch (Exception ex)
+	//	{
+	//		await base.OnErrorAsync(ex);
+	//	}
+	//	finally { base.IsBusy = false; }
+	//}
 	private async Task OnRunCommandAsync()
-	{
-		try
-		{
-			base.IsBusy = true;
-			if (this.UserInput.Exists())
-			{
-				await OnAddMessageCommandAsync();
-			}
-
-			(List<string> messages, string lastMessageId) assistantMessages = await _openAIService.RunThreadAsync(
-				this.SelectedThread!.ThreadId,
-				this.Assistant!.Id,
-				this.SelectedThread!.LastMessageId);
-
-			this.SelectedThread!.LastMessageId = assistantMessages.lastMessageId;
-			await _userService.UpdateLastMessageIdAsync(
-				this.SelectedThread!.Id,
-				this.SelectedThread!.LastMessageId);
-			foreach (string message in assistantMessages.messages)
-			{
-				this.ChatLogControl!.ChatLogMessages.Add(new ChatLogMessage()
-				{
-					Owner = this.Assistant.Name,
-					Content = message
-				});
-			}
-		}
-		catch (Exception ex)
-		{
-			await base.OnErrorAsync(ex);
-		}
-		finally { base.IsBusy = false; }
-	}
-	private async Task OnRunCommand2Async()
 	{
 		try
 		{
@@ -328,11 +323,7 @@ public class AssistantChatUCViewModel : BaseViewModel
 			int tokenCount = await _openAIService.RunThreadStreamingAsync(
 				this.SelectedThread!.ThreadId,
 				this.Assistant!.Id,
-				this.SelectedThread!.LastMessageId,
 				assistantMessage);
-			await _userService.UpdateLastMessageIdAsync(
-				this.SelectedThread!.Id,
-				this.SelectedThread!.LastMessageId!);
 
 			//--Update token count
 			UpdateThreadTokenCount(tokenCount);
@@ -381,14 +372,7 @@ public class AssistantChatUCViewModel : BaseViewModel
 			{
 				this.IsBusy = true;
 
-				//            ChatSummarizationResult summaryResult = await _openAIService.SummarizeThreadMessagesAsync(
-				//	this.SelectedThread!.ThreadId,
-				//	this.Assistant!.Id);
-
-				//this.SelectedThread!.LastMessageId = summaryResult.LastMessageId;
-				//UpdateThreadTokenCount(summaryResult.NewTokenCount);
-
-				int newTokenCount = await _openAIService.SummarizeThreadMessagesAsync2(
+				int newTokenCount = await _openAIService.SummarizeThreadMessagesAsync(
 					this.SelectedThread!.ThreadId,
 					this.Assistant!.Id);
 

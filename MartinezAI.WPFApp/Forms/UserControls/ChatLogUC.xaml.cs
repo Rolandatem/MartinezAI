@@ -43,11 +43,11 @@ public partial class ChatLogUC : UserControl
         if (sender is not Button button) { return; }
 
         //--Get parent stack panel
-        StackPanel? stackPanel = VisualTreeUtilities.FindAncestor<StackPanel>(button);
-        if (stackPanel == null) { return; }
+        Grid? grid = VisualTreeUtilities.FindAncestor<Grid>(button);
+        if (grid == null) { return; }
 
         //--Find ChromiumWebBrowser child of stack panel.
-        var webBrowser = VisualTreeUtilities.FindChild<ChromiumWebBrowser>(stackPanel);
+        var webBrowser = VisualTreeUtilities.FindChild<ChromiumWebBrowser>(grid);
         if (webBrowser == null) { return; }
 
         webBrowser.GetBrowser().GetHost().ShowDevTools();

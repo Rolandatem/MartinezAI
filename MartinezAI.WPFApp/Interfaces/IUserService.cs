@@ -27,7 +27,4 @@ public interface IUserService
         string assistantId);
     Task DeleteThreadAsync(
         string threadId);
-    Task UpdateLastMessageIdAsync(
-        int threadDbId,
-        string lastMessageId);
 }

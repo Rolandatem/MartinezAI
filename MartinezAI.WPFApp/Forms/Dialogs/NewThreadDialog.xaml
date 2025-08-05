@@ -9,13 +9,14 @@
         WindowStartupLocation="CenterOwner"
         WindowStyle="None"
         SizeToContent="WidthAndHeight"
-        Width="300"
+        Width="350"
         Background="{DynamicResource AppBackgroundBrush}"
         d:DataContext="{d:DesignInstance vm:NewThreadDialogViewModel, IsDesignTimeCreatable=True}">
 
     <Border Background="{DynamicResource SurfaceBrush}"
-            Padding="10"
-            Margin="10">
+            Padding="20"
+            Margin="10"
+            CornerRadius="10">
         <Grid>
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto" />

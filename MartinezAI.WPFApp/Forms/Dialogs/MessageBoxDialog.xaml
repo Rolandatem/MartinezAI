@@ -13,7 +13,12 @@
         Background="{DynamicResource AppBackgroundBrush}"
         d:DataContext="{d:DesignInstance vm:MessageBoxDialogViewModel, IsDesignTimeCreatable=True}" WindowStyle="None">
 
-    <Border BorderBrush="{DynamicResource ContainerBorderBrush}" BorderThickness="1" CornerRadius="10" Padding="24" Background="{DynamicResource CardBrush}">
+    <Border BorderBrush="{DynamicResource ContainerBorderBrush}" 
+            BorderThickness="1" 
+            CornerRadius="10" 
+            Margin="10"
+            Padding="24" 
+            Background="{DynamicResource CardBrush}">
         <Grid>
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="Auto"/>

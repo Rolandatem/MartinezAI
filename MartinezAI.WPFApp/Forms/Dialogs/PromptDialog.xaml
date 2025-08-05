@@ -11,12 +11,14 @@
         Title="PromptDialog"
         WindowStartupLocation="CenterOwner"
         WindowStyle="None"
+        Background="{DynamicResource AppBackgroundBrush}"
         d:DataContext="{d:DesignInstance vm:PromptDialogViewModel, IsDesignTimeCreatable=True}">
 
     <Border BorderBrush="{DynamicResource ContainerBorderBrush}" 
             BorderThickness="1" 
             CornerRadius="10" 
-            Padding="24" 
+            Padding="20" 
+            Margin="10"
             Background="{DynamicResource CardBrush}">
         <StackPanel>
             <!-- Message -->

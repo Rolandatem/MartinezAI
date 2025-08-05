@@ -240,7 +240,7 @@ public class AssistantChatUCViewModel : BaseViewModel
 					base.IsBusy = true;
 					await _openAIService.DeleteThreadAsync(this.SelectedThread.ThreadId);
 
-					await base.DialogService!.ShowMessageBoxDialogAsync("Open AI Thread deleted successfully!", Enums.MessageBoxIconFlag.Info);
+					//await base.DialogService!.ShowMessageBoxDialogAsync("Open AI Thread deleted successfully!", Enums.MessageBoxIconFlag.Info);
 				}
 				catch (Exception ex) { await base.OnErrorAsync(ex); }
 				finally { base.IsBusy = false; }
@@ -252,7 +252,7 @@ public class AssistantChatUCViewModel : BaseViewModel
                     this.Threads.Remove(this.SelectedThread);
                     this.SelectedThread = null;
 
-					await base.DialogService!.ShowMessageBoxDialogAsync("DB Thread deleted successfully!", Enums.MessageBoxIconFlag.Info);
+					await base.DialogService!.ShowMessageBoxDialogAsync("Thread deleted successfully!", Enums.MessageBoxIconFlag.Info);
                 }
 				catch (Exception ex) { await base.OnErrorAsync(ex); }
 				finally { base.IsBusy = false; }

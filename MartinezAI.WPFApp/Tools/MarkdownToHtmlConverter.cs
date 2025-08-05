@@ -115,9 +115,22 @@ internal class MarkdownToHtmlConverter : IMarkdownToHtmlConverter
                     #content-div {{
                         box-sizing: border-box;
                     }}
+                    #loading-label {{
+                        position: fixed;
+                        top: 10px;
+                        left: 50%;
+                        transform: translateX(-50%);
+                        background-color: rgba(0, 0, 0, 0.7);
+                        color: #FFFFFF;
+                        padding: 5px 10px;
+                        border-radius: 5px;
+                        z-index: 100;
+                        font-weight: bold;
+                    }}
                 </style>
             </head>
             <body>
+                <div id='loading-label'>Loading...</div>
                 <div id='content-div'>{bodyHtml}</div>
 
                 <script>
@@ -137,6 +150,19 @@ internal class MarkdownToHtmlConverter : IMarkdownToHtmlConverter
                             }}
                             setTimeout(() => btn.textContent = 'Copy', 1500);
                             document.body.removeChild(textarea);
+                        }}
+                    }}
+
+                    function updateContent(newHtml) {{
+                        var contentDiv = document.getElementById('content-div');
+                        contentDiv.innerHTML = newHtml;
+                        Prism.highlightAll();
+                    }}
+
+                    function contentComplete() {{
+                        var loadingLabel = document.getElementById('loading-label');
+                        if (loadingLabel) {{
+                            loadingLabel.style.display = 'none';
                         }}
                     }}
                 </script>

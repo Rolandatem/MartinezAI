@@ -26,6 +26,9 @@ public partial class ChatLogUC : UserControl
             Application.Current.Dispatcher.Invoke(() =>
             {
                 webBrowser.Height = docHeight + 10;
+
+                ScrollViewer? scrollViewer = VisualTreeUtilities.FindAncestor<ScrollViewer>(webBrowser);
+                scrollViewer?.ScrollToEnd();
             });
         }
     }

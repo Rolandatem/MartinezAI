@@ -59,11 +59,7 @@ public static class CefAttachedProperties
 					if (webBrowser.CanExecuteJavascriptInMainFrame)
 					{
 						string bodyHtml = ServiceHelper.MarkdownToHtmlConverter!.ConvertBodyOnly(markdown);
-						string script = $@"
-							var contentDiv = document.getElementById('content-div');
-							if (contentDiv) {{
-								contentDiv.innerHTML = `{bodyHtml}`;
-							}}";
+						string script = $"updateContent(`{bodyHtml}`);";
 
 						JavascriptResponse result = await webBrowser.EvaluateScriptAsync(script);
 					}
@@ -88,14 +84,18 @@ public static class CefAttachedProperties
 					await Task.Delay(25);
 				}
 
-				JavascriptResponse response = await webBrowser.EvaluateScriptAsync("document.documentElement.scrollHeight");
-				int docHeight = (int)response.Result;
-
-				webBrowser.Dispatcher.Invoke(() =>
+				JavascriptResponse r2 = await webBrowser.EvaluateScriptAsync("contentComplete();");
+				JavascriptResponse response = await webBrowser.EvaluateScriptAsync("document.getElementsByTagName('body')[0].scrollHeight");
+				if (response.Success)
 				{
-					webBrowser.Height = docHeight + 10; 
-				});
-			}
+                    int docHeight = (int)response.Result;
+
+                    webBrowser.Dispatcher.Invoke(() =>
+                    {
+                        webBrowser.Height = docHeight + 10;
+                    });
+                }
+            }
 		}
 	}
 	#endregion

@@ -7,6 +7,7 @@ using Microsoft.ML.Tokenizers;
 using OpenAI.Assistants;
 using System.Collections.ObjectModel;
 using System.Text;
+using System.Transactions;
 using System.Windows.Media;
 
 namespace MartinezAI.WPFApp.ViewModels.UserControls;
@@ -262,48 +263,22 @@ public class AssistantChatUCViewModel : BaseViewModel
 	{
 		if (this.UserInput.Exists())
 		{
-			this.ChatLogControl!.ChatLogMessages.Add(new ChatLogMessage()
+			ChatLogMessage userMessage = new ChatLogMessage()
 			{
 				Owner = base.CurrentUser!.FirstName,
 				Content = this.UserInput
-			});
+			};
+
+            this.ChatLogControl!.ChatLogMessages.Add(userMessage);
 
             await _openAIService.CreateThreadMessageAsync(
 				this.SelectedThread!.ThreadId,
 				this.UserInput);
 
             this.UserInput = String.Empty;
+			userMessage.IsContentComplete = true;
         }
 	}
-	//private async Task OnRunCommandAsync()
-	//{
-	//	try
-	//	{
-	//		base.IsBusy = true;
-	//		if (this.UserInput.Exists())
-	//		{
-	//			await OnAddMessageCommandAsync();
-	//		}
-
-	//		List<string> assistantMessages = await _openAIService.RunThreadAsync(
-	//			this.SelectedThread!.ThreadId,
-	//			this.Assistant!.Id);
-
-	//		foreach (string message in assistantMessages)
-	//		{
-	//			this.ChatLogControl!.ChatLogMessages.Add(new ChatLogMessage()
-	//			{
-	//				Owner = this.Assistant.Name,
-	//				Content = message
-	//			});
-	//		}
-	//	}
-	//	catch (Exception ex)
-	//	{
-	//		await base.OnErrorAsync(ex);
-	//	}
-	//	finally { base.IsBusy = false; }
-	//}
 	private async Task OnRunCommandAsync()
 	{
 		try
@@ -359,6 +334,16 @@ public class AssistantChatUCViewModel : BaseViewModel
 			UpdateThreadTokenCount(tokenCount);
 
 			this.ChatLogControl!.ChatLogMessages = new ObservableCollection<ChatLogMessage>(previousMessages);
+			await Task.Delay(1000);
+			foreach (ChatLogMessage msg in previousMessages)
+			{
+				//--Mark each message complete after it's been loaded in to the collection so the
+				//--attached property can fire.
+				msg.IsContentComplete = true;
+
+				//--Small wait in between just in case.
+				await Task.Delay(200);
+			}
 		}
 		catch (Exception ex)
 		{

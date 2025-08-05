@@ -127,4 +127,17 @@ internal class UserService(
         _context.UserAssistantThreads.Remove(thread);
         await _context.SaveChangesAsync();
     }
+
+    public async Task UpdateLastMessageIdAsync(
+        int threadDbId,
+        string lastMessageId)
+    {
+        UserAssistantThread? thread = await _context.UserAssistantThreads
+            .FindAsync(threadDbId);
+
+        if (thread == null) { throw new Exception("Thread does not exist in database."); }
+
+        thread.LastMessageId = lastMessageId;
+        await _context.SaveChangesAsync();
+    }
 }

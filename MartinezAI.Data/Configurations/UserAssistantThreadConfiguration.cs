@@ -22,5 +22,6 @@ internal class UserAssistantThreadConfiguration : IEntityTypeConfiguration<UserA
         builder.Property(p => p.ThreadId)
             .HasMaxLength(100)
             .IsRequired();
+        builder.Property(p => p.LastMessageId).HasMaxLength(100);
     }
 }

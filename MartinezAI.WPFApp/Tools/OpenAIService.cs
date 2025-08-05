@@ -137,9 +137,10 @@ internal class OpenAIService : IOpenAIService
         }
     }
 
-    public async Task<List<string>> RunThreadAsync(
+    public async Task<(List<string> messages, string lastMessageId)> RunThreadAsync(
         string threadId,
-        string assistantId)
+        string assistantId,
+        string? lastMessageId)
     {
         try
         {
@@ -172,12 +173,21 @@ internal class OpenAIService : IOpenAIService
 
             //--Success status
             List<string> assistantMessages = new List<string>();
+            string newLastMessageId = String.Empty;
+            DateTimeOffset maxTimestamp = DateTimeOffset.MinValue;
             MessageCollectionOptions options = new MessageCollectionOptions();
             options.Order = MessageCollectionOrder.Ascending;
+            if (lastMessageId!.Exists()) { options.AfterId = lastMessageId; }
             if (checkRun.Value.Status == RunStatus.Completed)
             {
                 await foreach (ThreadMessage threadMessage in client.GetMessagesAsync(threadId, options))
                 {
+                    if (maxTimestamp < threadMessage.CreatedAt)
+                    {
+                        maxTimestamp = threadMessage.CreatedAt;
+                        newLastMessageId = threadMessage.Id;
+                    }
+
                     if (threadMessage.Role == MessageRole.Assistant)
                     {
                         foreach (MessageContent contentItem in threadMessage.Content)
@@ -191,7 +201,7 @@ internal class OpenAIService : IOpenAIService
                 }
             }
 
-            return assistantMessages;
+            return (assistantMessages, newLastMessageId);
         }
         catch(Exception ex)
         {
@@ -202,6 +212,7 @@ internal class OpenAIService : IOpenAIService
     public async Task<int> RunThreadStreamingAsync(
         string threadId,
         string assistantId,
+        string? lastMessageId,
         ChatLogMessage assistantMessage)
     {
         AssistantClient client = new AssistantClient(Properties.Settings.Default.OpenAIKey);
@@ -224,6 +235,14 @@ internal class OpenAIService : IOpenAIService
                 case StreamingUpdateReason.RunRequiresAction:
                     //--TODO
                     break;
+
+                case StreamingUpdateReason.MessageCreated:
+                    //--New message started, get ID for tracking
+                    if (update is MessageStatusUpdate messageUpdate)
+                    {
+                        lastMessageId = messageUpdate.Value.Id;
+                    }
+                    break; //--Check type to case, hopefully we can get the message id from this.
 
                 case StreamingUpdateReason.MessageUpdated:
                     if (update is MessageContentUpdate contentUpdate)

@@ -279,6 +279,40 @@ public class AssistantChatUCViewModel : BaseViewModel
 	{
 		try
 		{
+			base.IsBusy = true;
+			if (this.UserInput.Exists())
+			{
+				await OnAddMessageCommandAsync();
+			}
+
+			(List<string> messages, string lastMessageId) assistantMessages = await _openAIService.RunThreadAsync(
+				this.SelectedThread!.ThreadId,
+				this.Assistant!.Id,
+				this.SelectedThread!.LastMessageId);
+
+			this.SelectedThread!.LastMessageId = assistantMessages.lastMessageId;
+			await _userService.UpdateLastMessageIdAsync(
+				this.SelectedThread!.Id,
+				this.SelectedThread!.LastMessageId);
+			foreach (string message in assistantMessages.messages)
+			{
+				this.ChatLogControl!.ChatLogMessages.Add(new ChatLogMessage()
+				{
+					Owner = this.Assistant.Name,
+					Content = message
+				});
+			}
+		}
+		catch (Exception ex)
+		{
+			await base.OnErrorAsync(ex);
+		}
+		finally { base.IsBusy = false; }
+	}
+	private async Task OnRunCommand2Async()
+	{
+		try
+		{
 			if (this.UserInput.Exists())
 			{
 				await OnAddMessageCommandAsync();
@@ -294,7 +328,11 @@ public class AssistantChatUCViewModel : BaseViewModel
 			int tokenCount = await _openAIService.RunThreadStreamingAsync(
 				this.SelectedThread!.ThreadId,
 				this.Assistant!.Id,
+				this.SelectedThread!.LastMessageId,
 				assistantMessage);
+			await _userService.UpdateLastMessageIdAsync(
+				this.SelectedThread!.Id,
+				this.SelectedThread!.LastMessageId!);
 
 			//--Update token count
 			UpdateThreadTokenCount(tokenCount);
@@ -343,7 +381,14 @@ public class AssistantChatUCViewModel : BaseViewModel
 			{
 				this.IsBusy = true;
 
-				int newTokenCount = await _openAIService.SummarizeThreadMessagesAsync(
+				//            ChatSummarizationResult summaryResult = await _openAIService.SummarizeThreadMessagesAsync(
+				//	this.SelectedThread!.ThreadId,
+				//	this.Assistant!.Id);
+
+				//this.SelectedThread!.LastMessageId = summaryResult.LastMessageId;
+				//UpdateThreadTokenCount(summaryResult.NewTokenCount);
+
+				int newTokenCount = await _openAIService.SummarizeThreadMessagesAsync2(
 					this.SelectedThread!.ThreadId,
 					this.Assistant!.Id);
 

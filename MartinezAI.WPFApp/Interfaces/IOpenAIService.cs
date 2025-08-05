@@ -18,12 +18,14 @@ public interface IOpenAIService
     Task CreateThreadMessageAsync(
         string threadId,
         string message);
-    Task<List<string>> RunThreadAsync(
+    Task<(List<string> messages, string lastMessageId)> RunThreadAsync(
             string threadId,
-            string assistantId);
+            string assistantId,
+            string? lastMessageid);
     Task<int> RunThreadStreamingAsync(
         string threadId,
         string assistantId,
+        string? lastMessageid,
         ChatLogMessage assistantMessage);
     Task<List<ChatLogMessage>> GetPreviousMessagesAsync(
         string threadId);

@@ -60,7 +60,8 @@ public partial class BusyIndicator : UserControl
             try
             {
                 await Task.Delay(500, _delayCancellationTokenSource.Token);
-                if (_delayCancellationTokenSource.IsCancellationRequested == false &&
+                if (_delayCancellationTokenSource != null &&
+                    _delayCancellationTokenSource.IsCancellationRequested == false &&
                     this.IsBusy)
                 {
                     this.IsOverlayVisible = true;

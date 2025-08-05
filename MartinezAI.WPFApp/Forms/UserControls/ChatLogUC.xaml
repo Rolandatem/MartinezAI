@@ -11,37 +11,57 @@
              d:DesignHeight="450" d:DesignWidth="800"
              d:DataContext="{d:DesignInstance vm:ChatLogUCViewModel, IsDesignTimeCreatable=True}">
 
-    <ScrollViewer VerticalScrollBarVisibility="Auto">
-        <ItemsControl x:Name="ChatLogHistory"
-                      ItemsSource="{Binding ChatLogMessages}"
-                      Margin="0,0,10,0">
-            <ItemsControl.ItemTemplate>
-                <DataTemplate>
-                    <Border Margin="0,5">
-                        <StackPanel>
-                            <Grid Margin="0,0,0,5">
-                                <TextBlock Text="{Binding Owner, StringFormat={}{0}:}"
-                                       FontWeight="Bold"
-                                       Foreground="{DynamicResource MainFontForegroundBrush}"
-                                       FontSize="14" />
-                                <Button Content="&#x2699;"
+    <Grid HorizontalAlignment="Stretch"
+          VerticalAlignment="Stretch">
+
+        <ScrollViewer HorizontalAlignment="Stretch"
+                      VerticalAlignment="Stretch"
+                      VerticalScrollBarVisibility="Auto">
+            <ItemsControl x:Name="ChatLogHistory"
+                          HorizontalAlignment="Stretch"
+                          VerticalAlignment="Stretch"
+                          ItemsSource="{Binding ChatLogMessages}"
+                          Margin="0,0,10,0">
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                        <Border Margin="0,5"
+                                HorizontalAlignment="Stretch">
+                            <Grid HorizontalAlignment="Stretch">
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto" />
+                                </Grid.RowDefinitions>
+
+                                <TextBlock Grid.Row="0" 
+                                           Text="{Binding Owner, StringFormat={}{0}:}"
+                                           FontWeight="Bold"
+                                           FontSize="14"
+                                           Foreground="{DynamicResource MainFontForegroundBrush}"/>
+
+                                <Button Grid.Row="0" 
+                                        Content="&#x2699;"
                                         HorizontalAlignment="Right"
                                         Style="{DynamicResource IconButtonStyle}"
-                                        Click="DevTools_Click"/>
+                                        Click="DevTools_Click" />
+
+                                <Border Grid.Row="1"
+                                        HorizontalAlignment="Stretch"
+                                        BorderBrush="{DynamicResource ContainerBorderBrush}"
+                                        BorderThickness="2"
+                                        CornerRadius="8"
+                                        Padding="5">
+                                    <cef:ChromiumWebBrowser ap:CefAttachedProperties.Html="{Binding Content}"
+                                                            HorizontalAlignment="Stretch"
+                                                            Loaded="ChromiumWebBrowser_Loaded"
+                                                            LoadingStateChanged="ChromiumWebBrowser_LoadingStateChanged" />
+                                </Border>
                             </Grid>
-                            <Border BorderBrush="{DynamicResource ContainerBorderBrush}"
-                                    BorderThickness="2"
-                                    CornerRadius="8"
-                                    Padding="5">
-                                <cef:ChromiumWebBrowser ap:CefAttachedProperties.Html="{Binding Content}" 
-                                                        Loaded="ChromiumWebBrowser_Loaded"
-                                                        LoadingStateChanged="ChromiumWebBrowser_LoadingStateChanged"/>
-                            </Border>
-                        </StackPanel>
-                    </Border>
-                </DataTemplate>
-            </ItemsControl.ItemTemplate>
-        </ItemsControl>
-    </ScrollViewer>
+                        </Border>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+        </ScrollViewer>
+        
+    </Grid>
 
 </UserControl>

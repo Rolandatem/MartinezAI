@@ -125,7 +125,9 @@
                 Margin="10"
                 Background="{DynamicResource SurfaceBrush}"
                 CornerRadius="8">
-            <ContentControl Content="{Binding WorkspaceContent, Converter={StaticResource viewModelToViewConverter}}"/>
+            <ContentControl Content="{Binding WorkspaceContent, Converter={StaticResource viewModelToViewConverter}}"
+                            HorizontalAlignment="Stretch"
+                            VerticalAlignment="Stretch"/>
         </Border>
     </Grid>
 </UserControl>

@@ -162,7 +162,7 @@ public class AssistantChatUCViewModel : BaseViewModel
 	public AsyncCommand OnNewThreadCommand => new AsyncCommand(OnNewThreadCommandAsync);
 	public AsyncCommand OnDeleteThreadCommand => new AsyncCommand(OnDeleteThreadCommandAsync);
 	public AsyncCommand OnAddMessageCommand => new AsyncCommand(OnAddMessageCommandAsync, () => this.SelectedThread != null);
-	public AsyncCommand OnRunCommand => new AsyncCommand(OnRunCommand2Async, () => this.SelectedThread != null);
+	public AsyncCommand OnRunCommand => new AsyncCommand(OnRunCommandAsync, () => this.SelectedThread != null);
 	public AsyncCommand OnLoadPreviousMessagesCommand => new AsyncCommand(OnLoadPreviousMessagesCommandAsync);
 	public AsyncCommand OnSummarizeThreadMessagesCommand => new AsyncCommand(OnSummarizeThreadMessagesCommandAsync);
     #endregion
@@ -276,34 +276,6 @@ public class AssistantChatUCViewModel : BaseViewModel
         }
 	}
 	private async Task OnRunCommandAsync()
-	{
-		try
-		{
-			base.IsBusy = true;
-			if (this.UserInput.Exists())
-			{
-				await OnAddMessageCommandAsync();
-			}
-
-			List<string> assistantMessages = await _openAIService.RunThreadAsync(
-				this.SelectedThread!.ThreadId,
-				this.Assistant!.Id);
-			foreach (string message in assistantMessages)
-			{
-				this.ChatLogControl!.ChatLogMessages.Add(new ChatLogMessage()
-				{
-					Owner = this.Assistant.Name,
-					Content = message
-				});
-			}
-		}
-		catch (Exception ex)
-		{
-			await base.OnErrorAsync(ex);
-		}
-		finally { base.IsBusy = false; }
-	}
-	private async Task OnRunCommand2Async()
 	{
 		try
 		{
